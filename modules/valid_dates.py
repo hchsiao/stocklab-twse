@@ -1,23 +1,23 @@
 import numpy as np
 
 import stocklab
-from stocklab.date import Date
+from stocklab.date import Date, date_to_timestamp
 from stocklab.error import InvalidDateRequested
 
 class valid_dates(stocklab.MetaModule):
   TWSE_FIRST_DAY = Date('20100104')
   spec = {
       'update_threshold': 1440,
-      'ignore_nonunique': True,
+      'ignore_existed': True,
       'crawler': 'TwseCrawler.dates',
       'args': [
         ('target_date', Date),
         ('N', int),
         ('phase_shift', ['lead', 'zero', 'lag']),
         ],
-      'schema': [
-        ('date integer', "strftime('%s', ?)", 'key')
-        ]
+      'schema': {
+        'date': {'type': 'integer', 'pre_proc': date_to_timestamp, 'key': True}
+        }
       }
 
   def run(self, args):
@@ -29,12 +29,16 @@ class valid_dates(stocklab.MetaModule):
     return self.access_db(args)
 
   def query_db(self, db, args):
-    # Query
+    table = db[self.name]
+    date_field = table.date
+
     lagphase_sql = "SELECT date(date, 'unixepoch')\
         FROM valid_dates\
         WHERE date <= strftime('%s', ?)\
         ORDER BY date DESC\
         LIMIT ?;"
+    query = date_field <= args.target_date.timestamp()
+    db(query).select(orderby=~date_field)
     leadphase_sql = "SELECT date(date, 'unixepoch')\
         FROM valid_dates\
         WHERE date >= strftime('%s', ?)\
@@ -58,23 +62,25 @@ class valid_dates(stocklab.MetaModule):
     return dates, False, {}
 
   def check_update(self, db, last_args=None):
-    db_max_str = next(db.execute("SELECT date(MAX(date), 'unixepoch') FROM valid_dates"))[0]
-    db_min_str = next(db.execute("SELECT date(MIN(date), 'unixepoch') FROM valid_dates"))[0]
+    table = db[self.name]
+    date_field = table.date
+    db_max_str = db().select(date_field.max())[0][date_field.max()]
+    db_min_str = db().select(date_field.min())[0][date_field.min()]
 
     if not db_max_str:
       fetch_date = valid_dates.TWSE_FIRST_DAY
     elif last_args is None:
-      max_date = Date(db_max_str)
+      max_date = Date(db_max_str, tstmp=True)
       max_month = int(int(max_date) / 100)
       fetch_date = Date(f'{max_month}01')
     else:
-      max_date = Date(db_max_str)
+      max_date = Date(db_max_str, tstmp=True)
       max_month = int(int(max_date) / 100)
       this_month = int(int(Date.today()) / 100)
       if max_month == this_month:
         fetch_date = None
         self.logger.info('Update complete')
-        assert Date(db_min_str) == valid_dates.TWSE_FIRST_DAY
+        assert Date(db_min_str, tstmp=True) == valid_dates.TWSE_FIRST_DAY
       else:
         fetch_date = Date(f'{max_month}01').shift(1, 'month')
 

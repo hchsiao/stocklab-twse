@@ -1,6 +1,6 @@
-CACHE_FILE = "cache.db"
-MODULE_DIR = "modules/"
-CRAWlER_DIR = "crawlers/"
+MODULE_DIR = "./modules/"
+CRAWlER_DIR = "./crawlers/"
+DATA_DIR = "./app_data/"
 
 import importlib.util
 import os
@@ -8,23 +8,29 @@ root_path = importlib.util.find_spec(__name__).origin
 root_path = os.path.abspath(root_path + "/../../")
 modules_path = os.path.join(root_path, MODULE_DIR)
 crawlers_path = os.path.join(root_path, CRAWlER_DIR)
+data_path = os.path.join(root_path, DATA_DIR)
 
 import logging
 log_level = logging.INFO
 init_flag = False
 _logger = None
 
+_loggers = {}
 def create_logger(name):
-  global log_level
-  logger = logging.getLogger(name)
-  log_handler = logging.StreamHandler()
-  log_format = logging.Formatter(
-      f"[%(levelname)s] {name}: %(message)s"
-      )
-  log_handler.setFormatter(log_format)
-  logger.addHandler(log_handler)
-  logger.setLevel(log_level)
-  return logger
+  global log_level, _loggers
+  if name in _loggers:
+    return _loggers[name]
+  else:
+    logger = logging.getLogger(name)
+    log_handler = logging.StreamHandler()
+    log_format = logging.Formatter(
+        f"[%(levelname)s] {name}: %(message)s"
+        )
+    log_handler.setFormatter(log_format)
+    logger.addHandler(log_handler)
+    logger.setLevel(log_level)
+    _loggers[name] = logger
+    return logger
 
 from stocklab.args import Args
 from stocklab.base_crawler import Crawler
@@ -66,9 +72,6 @@ def change_log_level(level):
   _tmp.update(_crawlers)
   for m in _tmp.values():
     m.logger.setLevel(level)
-
-  from .states import logger
-  logger.setLevel(level)
 
   if not init_flag:
     _init()
@@ -122,6 +125,26 @@ def evaluate(path):
   assert mod_name not in _metamodules
   return _eval(path)
 
+import stocklab.utils
+def _update(mod):
+  thres = type(mod).spec['update_threshold']
+  if not stocklab.utils.is_outdated_since_last_update(mod.name, thres):
+    return
+  with get_db() as db:
+    last_args = None
+    db.declare_table(mod.name, type(mod).spec['schema'])
+    while True:
+      update_required, crawl_args = mod.check_update(db, last_args)
+      # TODO: detect if crawl_args == last_args (looping)
+      last_args = crawl_args
+      if update_required:
+        mod.logger.info('meta miss')
+        res = mod.parser(**crawl_args)
+        db.update(mod, res)
+        stocklab.utils.set_last_update_datetime(mod.name)
+      else:
+        break
+
 def metaevaluate(path):
   if not init_flag:
     _init()
@@ -129,9 +152,9 @@ def metaevaluate(path):
   _logger.debug(f'evaluating: {path}')
   mod_name = path.split('.')[0]
   assert mod_name in _metamodules
+  _update(get_module(mod_name))
   return _eval(path)
 
-import stocklab.utils
 def _init():
   global init_flag
   init_flag = True
@@ -144,28 +167,11 @@ def _init():
       m_name = mc[:-3]
       _create_singleton(modules_path, m_name)
 
-  def _update(mod):
-    thres = type(mod).spec['update_threshold']
-    if not stocklab.utils.is_outdated_since_last_update(mod.name, thres):
-      return
-    stocklab.utils.set_last_update_datetime(mod.name)
-    with get_db(mod.logger) as c:
-      last_args = None
-      while True:
-        update_required, crawl_args = mod.check_update(c, last_args)
-        # TODO: detect if crawl_args == last_args (looping)
-        last_args = crawl_args
-        if update_required:
-          mod.logger.info('meta miss')
-          res = mod.parser(**crawl_args)
-          c.update(mod, res)
-        else:
-          break
   for m in _metamodules.keys():
     mod = _metamodules[m]
     _update(mod)
 
   if stocklab.utils.is_outdated_since_last_update('', 120):
     stocklab.utils.set_last_update_datetime('')
-    last_trade_date = str(get_crawler('TwseCrawler')._last_trade_date())
-    set_state('d_last_trade', last_trade_date, fmt="strftime('%s', ?)")
+    last_trade_date = get_crawler('TwseCrawler')._last_trade_date()
+    set_state('d_last_trade', str(last_trade_date.timestamp()))

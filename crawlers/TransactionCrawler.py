@@ -5,7 +5,7 @@ import bs4
 
 import stocklab
 import stocklab.states
-from stocklab.date import Date
+from stocklab.date import Date, datetime_to_timestamp
 from stocklab.error import NoLongerAvailable
 
 SRC = 'cnyes'
@@ -62,8 +62,6 @@ class TransactionCrawler(stocklab.Crawler):
     return retval
 
   def parser(self, stock_id, date):
-    retval = self._trans(stock_id)
-
     # Check date validity (TODAY will be valid after the market closed)
     stocklab.metaevaluate(f'valid_dates.{date}.1.lag')
     # Check the date requested matches data on the website
@@ -71,33 +69,44 @@ class TransactionCrawler(stocklab.Crawler):
     if date != trade_date:
       raise NoLongerAvailable('Requested date not available. Unless another source of data are found')
 
+    retval = self._trans(stock_id)
+
     def f(s):
       if '--' == s:
         return None
       return 0 if s == '' else float(s)
     def t(s):
       assert len(s.split(':')) == 3
-      return f'1970-01-01 {s}'
+      dt = datetime.strptime(f'1970-01-01 {s}', '%Y-%m-%d %H:%M:%S')
+      return datetime_to_timestamp(dt)
     result = []
     last_t = None
     for time_str, buy, sell, deal, vol in retval:
       curr_t = t(time_str)
       if last_t is not None and last_t == curr_t:
-        _buy, _sell, _deal, _vol = result[-1][3:]
-        result[-1] = (
-            stock_id, str(trade_date), curr_t,
-            f(buy) + _buy, f(sell) + _sell,
-            f(deal) + _deal, int(vol) + _vol
-            )
+        result[-1]['buy'] += f(buy)
+        result[-1]['sell'] += f(sell)
+        result[-1]['deal'] += f(deal)
+        result[-1]['volume'] += int(vol)
       else:
         last_t = curr_t
-        result.append((
-              stock_id, str(trade_date), 
-              curr_t, f(buy), f(sell), f(deal), int(vol)
-              ))
+        result.append({
+          'stock_id': stock_id,
+          'date': trade_date,
+          'time': curr_t,
+          'buy': f(buy),
+          'sell': f(sell),
+          'deal': f(deal),
+          'volume': int(vol)
+          })
     if not result:
-      result.append((
-            stock_id, str(trade_date), 
-            None, None, None, None, None
-            ))
+      result.append({
+        'stock_id': stock_id,
+        'date': trade_date,
+        'time': None,
+        'buy': None,
+        'sell': None,
+        'deal': None,
+        'volume': None
+        })
     return result

@@ -2,35 +2,23 @@ import stocklab
 from stocklab.date import Date
 import logging
 
-logger = logging.getLogger('_states')
-logger.setLevel(stocklab.log_level)
+_table_name = 'stocklab__states'
 
-with stocklab.get_db(logger) as c:
-  # Create table
-  create_sql = f"CREATE TABLE _states (\
-      key text, val text,\
-      PRIMARY KEY (key)\
-  );"
-  if not c.has_table('_states'):
-    c.execute(create_sql)
+# do not explicitly set primary key otherwise 'update_or_insert' won't work
+_schema = {
+    'key': {'type': 'string'},
+    'val': {'type': 'string'},
+    }
 
 def get(key):
-  with stocklab.get_db(logger) as c:
-    select_sql = f"SELECT val FROM _states WHERE key = ?"
-    query_res = [r for r in c.execute(select_sql, (key,))]
-    return query_res[0][0] if query_res else None
-  assert False
+  with stocklab.get_db() as db:
+    db.declare_table(_table_name, _schema)
+    rows = db(db[_table_name]['key'] == key).select()
+    return rows[0]['val'] if rows else None
 
-def set(key, val, fmt='?'):
+def set(key, val):
   assert type(val) is str, f'expected type is str, got {type(val)}'
-  old_val = get(key)
-  with stocklab.get_db(logger) as c:
-    if old_val:
-      sql = f"UPDATE _states SET val={fmt} WHERE key = ?"
-      c.execute(sql, (val, key))
-    else:
-      sql = f"INSERT INTO _states(key, val) VALUES(?, {fmt})"
-      c.execute(sql, (key, val))
-    c.commit()
-    return
-  assert False
+  with stocklab.get_db() as db:
+    db.declare_table(_table_name, _schema)
+    table = db[_table_name]
+    table.update_or_insert(table.key==key, key=key, val=val)

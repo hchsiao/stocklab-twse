@@ -1,11 +1,15 @@
 ## TODO
-- implement time_to_crawl(datetime, db)
+- valid_dates.py adapt pydal
+- debug update.py, use colab crawl wantgoo to test new interface (preserve old)
+- optimize wantgoo crawler
+- test ignore_existed
 - grep -r 'TODO' .
-- use pyDAL (refactor: grep -r 'get_db' .)
-- maintain 'day_off' tab (stop trade for only few days)
-- stocklab.evaluate cannot be invoked from a crawler
-- transactions do not depend on twse, but invoked twse
+- reset git when new db stable
+
+- implement time_to_crawl(datetime, db)
+- merge old db
 - distrubute as bundles (stocklab_core, twse_bundle, ...), de-couple
+- maintain 'day_off' tab (stop trade for only few days)
 
 ## TODO: Main objective (to predict)
 - (exist/never) k-(higher/lower) than current price within N-days

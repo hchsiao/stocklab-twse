@@ -1,6 +1,4 @@
 import abc
-
-import sqlite3
 import logging
 
 import stocklab
@@ -48,14 +46,14 @@ class Module(metaclass=abc.ABCMeta):
 
   def access_db(self, args):
     query_res = None
-    with stocklab.get_db(self.logger) as c:
-      c.create_if_not_exist(self)
+    with stocklab.get_db() as db:
+      db.declare_table(self.name, type(self).spec['schema'])
       while True:
-        query_res, db_miss, crawl_args = self.query_db(c, args)
+        query_res, db_miss, crawl_args = self.query_db(db, args)
         if db_miss:
           self.logger.info('db miss')
           res = self.parser(**crawl_args)
-          c.update(self, res)
+          db.update(self, res)
         else:
           break
     return query_res

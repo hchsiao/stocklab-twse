@@ -10,9 +10,10 @@ def _crawl(stock_id):
 
 def for_each_stock_id(cb):
   # all types
-  type_ids, type_names = list(zip(*stocklab.metaevaluate('stock_types')))
+  type_ids = [row.type_id for row in stocklab.metaevaluate('stock_types')]
+  type_names = [row.name for row in stocklab.metaevaluate('stock_types')]
   
-  suspended = [ent[0] for ent in stocklab.metaevaluate('suspended')]
+  suspended = [row.stock_id for row in stocklab.metaevaluate('suspended')]
   for type_id in type_ids:
     type_count = stocklab.metaevaluate(f'stocks.count.{type_id}._')
     for s_idx in range(type_count):

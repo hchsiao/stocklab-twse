@@ -1,9 +1,11 @@
 from datetime import datetime, timedelta
 import stocklab
+import calendar
 
 def set_last_update_datetime(mod_name):
-  last_update_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-  stocklab.set_state(f'{mod_name}__t_last_update', last_update_time, fmt="strftime('%s', ?)")
+  last_update_time = datetime.now()
+  tstmp = calendar.timegm(last_update_time.timetuple())
+  stocklab.set_state(f'{mod_name}__t_last_update', str(tstmp))
 
 def last_update_datetime(mod_name):
   t_last_update = stocklab.get_state(f'{mod_name}__t_last_update')

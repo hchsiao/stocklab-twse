@@ -1,72 +1,92 @@
-import sqlite3
+import pydal
 from contextlib import ContextDecorator
 
 import stocklab
-class get_db(ContextDecorator):
-  def __init__(self, logger):
+CACHE_FILE = "cache.sqlite"
+DATABASE_FILE = "db.sqlite"
+
+import os
+db_path = os.path.join(stocklab.data_path, DATABASE_FILE)
+cache_path = os.path.join(stocklab.data_path, CACHE_FILE)
+
+def _get_keys(schema):
+  return [field_name
+      for field_name, field_config in schema.items()
+      if 'key' in field_config and field_config['key']
+      ]
+
+class get_db(pydal.DAL, ContextDecorator):
+  def __init__(self, *args, **kwargs):
+    self.__args = args
+    self.__kwargs = kwargs
+    self.__kwargs['folder'] = stocklab.data_path
     self.logger = stocklab.create_logger('stocklab_db')
 
   def __enter__(self):
-    self.conn = sqlite3.connect(stocklab.CACHE_FILE)
-    self.c = self.conn.cursor()
+    uri = f'sqlite://{db_path}'
+    super().__init__(uri=uri, *self.__args, **self.__kwargs)
     return self
 
   def __exit__(self, err_type, err_value, traceback):
-    if err_type is sqlite3.Error:
+    if isinstance(err_type, Exception):
       self.logger.error(err_value)
-      if self.conn:
-        self.conn.close()
-        # self.c.close() not required
-      return True
-    return False
+    self.close()
+    return False # do not eliminate error
   
-  def commit(self, *args):
-    return self.conn.commit(*args)
-  
-  def execute(self, *args):
-    return self.c.execute(*args)
+  def declare_table(self, name, schema):
+    def _field(name, config):
+      _cfg = config.copy()
+      try: # pop-out params not used by pyDAL
+        _cfg.pop('key')
+        _cfg.pop('pre_proc')
+      except KeyError:
+        pass
+      return pydal.Field(name, **_cfg)
+    fields = [_field(field_name, schema[field_name])
+        for field_name in schema.keys()]
 
-  def has_table(self, name):
-    exist = [r for r in self.execute(f"SELECT name FROM sqlite_master\
-        WHERE type='table' AND name='{name}';")]
-    return bool(exist)
-
-  def create_if_not_exist(self, mod):
-    schema = type(mod).spec['schema']
-    schema_sql = ', '.join([col[0] for col in schema])
-    key_fields = []
-    for col in schema:
-      if 'key' in col:
-        key_fields.append(col[0].split(' ')[0])
+    key_fields = _get_keys(schema)
     if key_fields:
-      key_fields = ', '.join(key_fields)
-      create_sql = f"CREATE TABLE {mod.name} (\
-          {schema_sql},\
-          PRIMARY KEY ({key_fields})\
-      );"
+      self.define_table(name, primarykey=key_fields, *fields)
     else:
-      create_sql = f"CREATE TABLE {mod.name} (\
-          {schema_sql}\
-      );"
-    if not self.has_table(mod.name):
-      self.logger.debug("creating DB with sql: " + create_sql)
-      self.execute(create_sql)
+      self.define_table(name, *fields)
 
   def update(self, mod, res):
-    schema = type(mod).spec['schema']
-    ignore_nonunique = type(mod).spec['ignore_nonunique'] if \
-        'ignore_nonunique' in type(mod).spec else False
     assert type(res) is list
-    cols = ', '.join([col[0].split(' ')[0] for col in schema])
-    fmts = ', '.join([col[1] for col in schema])
-    sql = f"INSERT INTO {mod.name}({cols})\
-        VALUES({fmts})"
+    assert all([type(rec) is dict for rec in res])
+    schema = type(mod).spec['schema']
+    ignore_existed = type(mod).spec['ignore_existed'] if \
+        'ignore_existed' in type(mod).spec else False
+
+    def _proc(key, val):
+      cfg = schema[key]
+      field_type = cfg['type'] if 'type' in cfg else 'string'
+      type_map = {
+          'string': str,
+          'text': str,
+          'integer': int,
+          }
+      processed = cfg['pre_proc'](val) if 'pre_proc' in cfg else val
+      if field_type in type_map.keys():
+        assert type(processed) is type_map[field_type], 'type error in DB insertion.' +\
+            f' Field {key} requires {field_type}, got {type(processed)}'
+      return processed
+
+    table = self[mod.name]
     for rec in res:
-      try:
-        self.execute(sql, tuple(rec))
-      except sqlite3.IntegrityError as e:
-        if ignore_nonunique:
-          continue
-        else:
-          raise e
+      rec = {k:_proc(k, v) for k, v in rec.items()}
+
+      if ignore_existed: # TODO: test this case
+        key_fields = _get_keys(schema)
+        queries = [table[k] == v for k, v in rec.items() if k in key_fields]
+        assert len(key_fields) > 0
+        def _and(qs):
+          if len(qs) == 1:
+            return qs[0]
+          else:
+            return qs[0] & _and(qs[1:])
+        if not self[mod.name](_and(queries)):
+          self[mod.name].insert(**rec)
+      else:
+        self[mod.name].insert(**rec)
     self.commit()

@@ -1,15 +1,16 @@
 import stocklab
+from stocklab.date import date_to_timestamp
 
 class suspended(stocklab.MetaModule):
   spec = {
       'update_threshold': 1440,
-      'ignore_nonunique': True,
+      'ignore_existed': True,
       'crawler': 'TwseCrawler.suspended_listing',
       'args': [],
-      'schema': [
-        ('stock_id text', '?', 'key'),
-        ('date integer', "strftime('%s', ?)"),
-        ]
+      'schema': {
+        'stock_id': {'key': True},
+        'date': {'type': 'integer', 'pre_proc': date_to_timestamp},
+        }
       }
 
   def run(self, args):
@@ -24,6 +25,5 @@ class suspended(stocklab.MetaModule):
       return False, {}
 
   def query_db(self, db, args):
-    select_sql = "SELECT * FROM suspended;"
-    query_res = [r for r in db.execute(select_sql)]
-    return query_res, False, {}
+    retval = db(db[self.name]).select()
+    return retval, False, {}

@@ -2,6 +2,10 @@ import copy
 import functools
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
+import calendar
+
+def datetime_to_timestamp(dt):
+  return int(calendar.timegm(dt.timetuple()))
 
 @functools.total_ordering
 class Date:
@@ -49,6 +53,9 @@ class Date:
     result.dd = result.datetime.day
     return result
 
+  def timestamp(self):
+    return datetime_to_timestamp(self.datetime)
+
   def __str__(self):
     return self.datetime.strftime('%Y-%m-%d')
 
@@ -66,3 +73,7 @@ class Date:
 
   def __sub__(self, other):
     return (self.datetime - other.datetime).days
+
+def date_to_timestamp(date):
+  assert type(date) is Date
+  return date.timestamp()

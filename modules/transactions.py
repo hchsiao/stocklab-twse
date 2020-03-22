@@ -1,6 +1,6 @@
 import time
 import stocklab
-from stocklab.date import Date
+from stocklab.date import Date, date_to_timestamp
 
 class transactions(stocklab.Module):
   spec = {
@@ -10,30 +10,26 @@ class transactions(stocklab.Module):
         'stock_id',
         ('date', Date),
         ],
-      'schema': [
-        ('stock_id text', "?", 'key'),
-        ('date integer', "strftime('%s', ?)", 'key'),
-        ('time integer', "strftime('%s', ?)", 'key'),
-        ('buy real', "?"),
-        ('sell real', "?"),
-        ('deal real', "?"),
-        ('volume integer', "?"),
-        ]
+      'schema': {
+        'stock_id': {'key': True},
+        'date': {'type': 'integer', 'pre_proc': date_to_timestamp, 'key': True},
+        'time': {'type': 'integer', 'key': True},
+        'buy': {'type': 'double'},
+        'sell': {'type': 'double'},
+        'deal': {'type': 'double'},
+        'volume': {'type': 'integer'},
+        }
       }
 
   def run(self, args):
     return self.access_db(args)
 
   def query_db(self, db, args):
-    # Check stock validity
-    stocklab.evaluate(f'twse.{args.stock_id}.{args.date}.open')
-
-    select_sql = "SELECT *\
-        FROM transactions\
-        WHERE date = strftime('%s', ?) AND stock_id = ?"
-    
-    query = [r for r in db.execute(select_sql, (str(args.date), args.stock_id))]
-    if query:
-      return query, False, {'stock_id': args.stock_id, 'date': args.date}
+    table = db[self.name]
+    query = table.stock_id == args.stock_id
+    query &= table.date == args.date.timestamp()
+    retval = db(query).select()
+    if retval:
+      return retval, False, {'stock_id': args.stock_id, 'date': args.date}
     else:
-      return query, True, {'stock_id': args.stock_id, 'date': args.date}
+      return retval, True, {'stock_id': args.stock_id, 'date': args.date}

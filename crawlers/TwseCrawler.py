@@ -107,11 +107,17 @@ class TwseCrawler(stocklab.Crawler):
     
     def transform(_date, _n_share, _p_share, _open, _max, \
                     _min, _close, _, _n_transac):
-      return [stock_id, str(Date(_date)), \
-              to_int(_n_share), \
-              to_int(_p_share), to_float(_open), \
-              to_float(_max),  to_float(_min), \
-              to_float(_close), to_int(_n_transac)]
+      return {
+          'stock_id': stock_id,
+          'date': Date(_date),
+          'delta_n_share': to_int(_n_share),
+          'delta_price_share': to_int(_p_share),
+          'open': to_float(_open),
+          'max': to_float(_max),
+          'min': to_float(_min),
+          'close': to_float(_close),
+          'n_transactions': to_int(_n_transac)
+          }
 
     retval = [transform(*cells) for cells in jsn['data']]
     if str(date) not in [r[1] for r in retval]:
@@ -124,9 +130,15 @@ class TwseCrawler(stocklab.Crawler):
     date_s = str(fetch_date).replace('-', '')
     url = 'https://www.twse.com.tw/exchangeReport/FMTQIK?'\
             + f'response=json&date={date_s}'
-    jsn = self._request(url)
-    assert jsn['stat'] == 'OK', f'{jsn}'
-    return [(str(Date(info[0])),) for info in jsn['data']]
+    for nth_try in range(TwseCrawler.RETRY_LMT + 1):
+      jsn = self._request(url)
+
+      if jsn['stat'] == 'OK':
+        break
+      if nth_try == TwseCrawler.RETRY_LMT:
+        raise ParserError('bad response', {'res': jsn})
+
+    return [{'date': Date(info[0])} for info in jsn['data']]
 
   def stock_codes(self, targets):
     retvals = []
@@ -137,9 +149,13 @@ class TwseCrawler(stocklab.Crawler):
       _id = 0
       for s in s_list:
         stock_id, stock_name = s.split('\t')
-        retvals.append((type_id, _id, stock_id, stock_name))
+        retvals.append({
+          'type_id': type_id,
+          'id': _id,
+          'stock_id': stock_id,
+          'name': stock_name
+          })
         _id += 1
-    self.logger.debug(retvals)
     return retvals
 
   def stock_code_js(self):
@@ -168,10 +184,8 @@ class TwseCrawler(stocklab.Crawler):
             ]
     type_ids = [jsn[name] for name in names]
 
-    return list(zip(
-      type_ids,
-      names
-      ))
+    return [{'type_id': type_id, 'name': name}
+        for type_id, name in zip(type_ids, names)]
 
   def suspended_listing(self):
     url = 'https://www.twse.com.tw/zh/company/suspendListing'
@@ -186,7 +200,7 @@ class TwseCrawler(stocklab.Crawler):
           continue # ignore TWSE erroneous data (with empty date)
         _date, _name, _sid = [e.contents[0] for e in row if isinstance(e, bs4.element.Tag)]
         _date = f'{_date[:3]}-{_date[4:6]}-{_date[7:9]}'
-        retval.append((_sid, str(Date(_date))))
+        retval.append({'stock_id': str(_sid), 'date': Date(_date)})
     return retval
 
   def etf_listing(self):
@@ -198,7 +212,7 @@ class TwseCrawler(stocklab.Crawler):
     for row in tab:
       if isinstance(row, bs4.element.Tag):
         _date, _sid, _name, _firm, _type = [e.contents[0] for e in row if isinstance(e, bs4.element.Tag)]
-        retval.append((_sid, str(Date(_date))))
+        retval.append({'stock_id': str(_sid), 'date': Date(_date)})
     return retval
 
   def _last_trade_date(self):

@@ -1,3 +1,5 @@
 __pycache__/
 cache.db
 *.egg-info
+app_data/*
+!app_data/.gitkeep

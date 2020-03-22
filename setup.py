@@ -43,5 +43,6 @@ setup(
         'beautifulsoup4',
         'requests',
         'cloudscraper',
+        'pyDAL',
         ],
 )

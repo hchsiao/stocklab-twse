@@ -3,13 +3,13 @@ import stocklab
 class stock_types(stocklab.MetaModule):
   spec = {
       'update_threshold': 1440,
-      'ignore_nonunique': True,
+      'ignore_existed': True,
       'crawler': 'TwseCrawler.stock_code_js',
       'args': [],
-      'schema': [
-        ('type_id text', '?', 'key'),
-        ('name text', '?'),
-        ]
+      'schema': {
+        'type_id': {'key': True},
+        'name': {},
+        }
       }
 
   def run(self, args):
@@ -24,6 +24,5 @@ class stock_types(stocklab.MetaModule):
       return False, {}
 
   def query_db(self, db, args):
-    select_sql = "SELECT * FROM stock_types;"
-    query_res = [r for r in db.execute(select_sql)]
-    return query_res, False, {}
+    retval = db(db[self.name]).select()
+    return retval, False, {}

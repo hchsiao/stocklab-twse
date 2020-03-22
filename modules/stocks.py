@@ -3,19 +3,19 @@ import stocklab
 class stocks(stocklab.MetaModule):
   spec = {
       'update_threshold': 1440,
-      'ignore_nonunique': True,
+      'ignore_existed': True,
       'crawler': 'TwseCrawler.stock_codes',
       'args': [
         ('mode', ['get', 'count']),
         ('type_id', str),
         ('id', int),
         ],
-      'schema': [
-        ('type_id text', '?', 'key'),
-        ('id integer', '?', 'key'),
-        ('stock_id text', '?'),
-        ('name text', '?'),
-        ]
+      'schema': {
+        'type_id': {'key': True},
+        'id': {'type': 'integer', 'key': True},
+        'stock_id': {},
+        'name': {},
+        }
       }
 
   def run(self, args):
@@ -24,26 +24,28 @@ class stocks(stocklab.MetaModule):
   def check_update(self, db, last_args=None):
     if last_args is None:
       self.logger.info('Start updating stock list')
-      types = stocklab.metaevaluate('stock_types')
+      types = [(row.type_id, row.name) for row in stocklab.metaevaluate('stock_types')]
       return True, {'targets': types}
     else:
       self.logger.info('End updating stock list')
       return False, {}
 
   def query_db(self, db, args):
-    types = stocklab.metaevaluate('stock_types')
-    targets = [t for t in types if t[0] == args.type_id]
+    table = db[self.name]
     if args.mode == 'count':
       assert args.id == None
-      select_sql = "SELECT COUNT(type_id) AS cnt FROM stocks WHERE type_id=?;"
-      query_res = [r for r in db.execute(select_sql, (args.type_id,))]
-      return query_res[0][0], False, {}
+      query = table.type_id == args.type_id
+      retval = db(query).count()
+      return retval, False, {}
     elif args.mode == 'get':
+      type_rows = stocklab.metaevaluate('stock_types')
+      targets = [row for row in type_rows if row.type_id == args.type_id]
       assert len(targets) == 1
-      select_sql = "SELECT * FROM stocks WHERE type_id=? AND id=?;"
-      query_res = [r for r in db.execute(select_sql, (args.type_id, args.id))]
-      type_id = targets[0][0]
-      type_name = targets[0][1]
-      stock_id = query_res[0][2]
-      stock_name = query_res[0][3]
+      query = table.type_id == args.type_id
+      query &= table.id == args.id
+      retval = db(query).select()
+      type_id = targets[0].type_id
+      type_name = targets[0].name
+      stock_id = retval[0].stock_id
+      stock_name = retval[0].name
       return (stock_id, stock_name, type_name), False, {}

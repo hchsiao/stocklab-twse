@@ -21,8 +21,8 @@ def rand_stock(targets=None):
 
 # TODO: use numpy random
 def rand_date(start, end, size=1):
-  import sqlite3
-  conn = sqlite3.connect(stocklab.CACHE_FILE)
+  #conn = sqlite3.connect(stocklab.DATABASE_FILE)
+  # use pyDAL instead
   c = conn.cursor()
   
   start = str(Date(start))

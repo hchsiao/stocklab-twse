@@ -13,7 +13,7 @@ from stocklab.error import NoLongerAvailable, ParserError
 class WantgooCrawler(stocklab.Crawler):
   MAX_SPEED = 0.8 # TODO: investigate its limit
   TICK = 0.01
-  DATA_VALID_DAYS = 70 # TODO: investigate (20 weekdays?)
+  DATA_VALID_DAYS = 30
   RETRY_LMT = 3
   ROBUSTNESS = 2
 
@@ -101,6 +101,7 @@ class WantgooCrawler(stocklab.Crawler):
             None,
             None,
           )]
+    # TODO: wait longer and retry (perhaps ROBUSTNESS can be 1)
     assert data, str((info, data)) # if this failed, wantgoo may have changed their api
 
     def to_int(s):
@@ -119,30 +120,30 @@ class WantgooCrawler(stocklab.Crawler):
       if not e['券商名稱']:
         return None
       else:
-        retval = (
-            stock_id,
-            str(date),
-            parse_name(e['券商名稱']),
-            to_int(e['買量']),
-            to_int(e['賣量']),
-            to_float(e['買價']),
-            to_float(e['賣價']),
-            )
+        retval = {
+            'stock_id': stock_id,
+            'date': date,
+            'broker_id': parse_name(e['券商名稱']),
+            'buy_amt': to_int(e['買量']),
+            'sell_amt': to_int(e['賣量']),
+            'buy_price': to_float(e['買價']),
+            'sell_price': to_float(e['賣價']),
+            }
       return retval
     
     def get_seller(e):
       if not e['券商名稱2']:
         return None
       else:
-        retval = (
-            stock_id,
-            str(date),
-            parse_name(e['券商名稱2']),
-            to_int(e['買量2']),
-            to_int(e['賣量2']),
-            to_float(e['買價2']),
-            to_float(e['賣價2']),
-            )
+        retval = {
+            'stock_id': stock_id,
+            'date': date,
+            'broker_id': parse_name(e['券商名稱2']),
+            'buy_amt': to_int(e['買量2']),
+            'sell_amt': to_int(e['賣量2']),
+            'buy_price': to_float(e['買價2']),
+            'sell_price': to_float(e['賣價2']),
+            }
       return retval
 
     retval = []
