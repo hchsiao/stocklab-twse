@@ -1,15 +1,16 @@
 ## TODO
-- debug update.py, use colab crawl wantgoo to test new interface
+- use colab to test new interface
 - optimize wantgoo crawler
 - grep -r 'TODO' .
 
-- ignore_existed and update_existed
-- import stocklab.intepreter as sl
 - implement time_to_crawl(datetime, db)
 - merge old db (only broker_deals)
+- crawler detect abnormal result (e.g. all empty)
+
+- import stocklab.intepreter as sl
+- ignore_existed and update_existed
 - distrubute as bundles (stocklab_core, twse_bundle, ...), de-couple
 - maintain 'day_off' tab (stop trade for only few days)
-- crawler detect abnormal result (e.g. all empty)
 
 ## TODO: Main objective (to predict)
 - (exist/never) k-(higher/lower) than current price within N-days

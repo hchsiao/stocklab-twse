@@ -63,8 +63,7 @@ class get_db(pydal.DAL, ContextDecorator):
           'integer': int,
           }
       processed = cfg['pre_proc'](val) if 'pre_proc' in cfg else val
-      if field_type in type_map.keys():
-        # TODO: None should also be allowed
+      if field_type in type_map.keys() and processed is not None:
         assert type(processed) is type_map[field_type], 'type error in DB insertion.' +\
             f' Field {key} requires {field_type}, got {type(processed)}'
       return processed

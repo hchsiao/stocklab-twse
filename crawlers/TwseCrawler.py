@@ -86,8 +86,12 @@ class TwseCrawler(stocklab.Crawler):
     for nth_try in range(TwseCrawler.RETRY_LMT + 1):
       jsn = self._request(url)
 
-      flag_test = jsn['stat'] == 'OK'
-      format_test = jsn['fields'] == ['日期', '成交股數', '成交金額', '開盤價', '最高價', '最低價', '收盤價', '漲跌價差', '成交筆數']
+      try:
+        flag_test = jsn['stat'] == 'OK'
+        format_test = jsn['fields'] == ['日期', '成交股數', '成交金額', '開盤價', '最高價', '最低價', '收盤價', '漲跌價差', '成交筆數']
+      except KeyError:
+        flag_test = False
+        format_test = False
       if flag_test and format_test:
         break
       if nth_try == TwseCrawler.RETRY_LMT:
@@ -133,7 +137,11 @@ class TwseCrawler(stocklab.Crawler):
     for nth_try in range(TwseCrawler.RETRY_LMT + 1):
       jsn = self._request(url)
 
-      if jsn['stat'] == 'OK':
+      try:
+        success = jsn['stat'] == 'OK'
+      except KeyError:
+        success = False
+      if success:
         break
       if nth_try == TwseCrawler.RETRY_LMT:
         raise ParserError('bad response', {'res': jsn})
