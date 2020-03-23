@@ -12,6 +12,7 @@ from stocklab.error import NoLongerAvailable, ParserError
 class WantgooCrawler(stocklab.Crawler):
   MAX_SPEED = 0.8 # TODO: investigate its limit
   TICK = 0.01
+  RETRY_PERIOD = 30
   DATA_VALID_DAYS = 30
   RETRY_LMT = 3
   ROBUSTNESS = 2
@@ -65,30 +66,50 @@ class WantgooCrawler(stocklab.Crawler):
     data_url = f'https://www.wantgoo.com/stock/astock/agentstat_ajax?StockNo={stock_id}&Types=3.5&StartDate={date_s}&EndDate={date_s}&Rows=35'
     info_url = f'https://www.wantgoo.com/stock/astock/agentstat_total_ajax?StockNo={stock_id}&StartDate={date_s}&EndDate={date_s}&Rows=35'
 
-    for nth_try in range(WantgooCrawler.RETRY_LMT + 1):
-      # retry if got different resp. w/ the same url
-      resps = self.speed_limited_req([info_url] * WantgooCrawler.ROBUSTNESS)
-      info_resps = [r.text for r in resps]
-      if len(set(info_resps)) == 1:
-        info = json.loads(info_resps[0])
-        assert info['code'] == '0', str(info)
-        break
-      if nth_try == WantgooCrawler.RETRY_LMT:
-        raise ParserError('bad response', {'res': info_resps})
+    # retry if got different resp. w/ the same url
+    def _retry_when_fail(do_cb, success_cb, error_cb):
+      for nth_try in range(WantgooCrawler.RETRY_LMT + 1):
+        res = do_cb()
+        if success_cb(res):
+          return res
+        self.logger.info('got wrong data, waiting for retry')
+        time.sleep(WantgooCrawler.RETRY_PERIOD)
+      raise error_cb(res)
 
-    for nth_try in range(WantgooCrawler.RETRY_LMT + 1):
-      # retry if got different resp. w/ the same url
-      resps = self.speed_limited_req([data_url] * WantgooCrawler.ROBUSTNESS)
-      data_resps = [r.text for r in resps]
-      if len(set(data_resps)) == 1:
-        data = json.loads(data_resps[0])
-        assert data['code'] == '0', str(data)
-        break
-      if nth_try == WantgooCrawler.RETRY_LMT:
-        raise ParserError('bad response', {'res': data_resps})
+    def crawl():
+      # first crawl metadata of the stock
+      def get_info():
+        resps = self.speed_limited_req([info_url] * WantgooCrawler.ROBUSTNESS)
+        return [r.text for r in resps]
 
-    info = json.loads(info['returnValues'])
-    data = json.loads(data['returnValues'])
+      info_resps = _retry_when_fail(get_info,
+          lambda resps: len(set(resps)) == 1,
+          lambda resps: ParserError('bad response', {'res': resps})
+          )
+      info = json.loads(info_resps[0])
+      assert info['code'] == '0', str(info)
+      info = json.loads(info['returnValues'])
+
+      # then crawl the data
+      def get_data():
+        resps = self.speed_limited_req([data_url] * WantgooCrawler.ROBUSTNESS)
+        return [r.text for r in resps]
+
+      data_resps = _retry_when_fail(get_data,
+          lambda resps: len(set(resps)) == 1,
+          lambda resps: ParserError('bad response', {'res': resps})
+          )
+      data = json.loads(data_resps[0])
+      assert data['code'] == '0', str(data)
+      data = json.loads(data['returnValues'])
+
+      return info, data
+
+    # if this keep failing, wantgoo may have changed their api
+    info, data = _retry_when_fail(crawl,
+        lambda info_data: not info_data[0] or bool(info_data[1]),
+        lambda resps: ParserError('bad response', {'res': resps})
+        )
 
     if not info: # wantgoo returns empty list if the request is invalid
       return [(
@@ -100,8 +121,6 @@ class WantgooCrawler(stocklab.Crawler):
             None,
             None,
           )]
-    # TODO: wait longer and retry (perhaps ROBUSTNESS can be 1)
-    assert data, str((info, data)) # if this failed, wantgoo may have changed their api
 
     def to_int(s):
       f = to_float(s)
