@@ -26,46 +26,40 @@ class valid_dates(stocklab.MetaModule):
           + 'the earliest day in TWSE DB', args.target_date)
     elif args.target_date > Date.today():
       raise InvalidDateRequested('Future date requested', args.target_date)
-    return self.access_db(args)
+
+    dates = self.access_db(args)
+    if args.target_date not in dates:
+      raise InvalidDateRequested('Date requested is not weekday?', args.target_date)
+    return dates
 
   def query_db(self, db, args):
     table = db[self.name]
-    date_field = table.date
-
-    lagphase_sql = "SELECT date(date, 'unixepoch')\
-        FROM valid_dates\
-        WHERE date <= strftime('%s', ?)\
-        ORDER BY date DESC\
-        LIMIT ?;"
-    query = date_field <= args.target_date.timestamp()
-    db(query).select(orderby=~date_field)
-    leadphase_sql = "SELECT date(date, 'unixepoch')\
-        FROM valid_dates\
-        WHERE date >= strftime('%s', ?)\
-        ORDER BY date ASC\
-        LIMIT ?;"
-    zerophase_sql = "SELECT date(date, 'unixepoch')\
-        FROM valid_dates\
-        ORDER BY Abs(date - strftime('%s', ?)) ASC\
-        LIMIT ?;"
 
     if 'zero' == args.phase_shift:
       assert args.N % 2 == 1
-      select_sql = zerophase_sql
+      half_N = int(args.N / 2) + 1
+      query = table.date >= args.target_date.timestamp()
+      lead = db(query).select(orderby=table.date, limitby=(0, half_N))
+      query = table.date <= args.target_date.timestamp()
+      lag = db(query).select(orderby=~table.date, limitby=(0, half_N))
+      dates = [Date(r.date, tstmp=True) for r in lag] \
+          + [Date(r.date, tstmp=True) for r in lead][1:]
     elif 'lead' == args.phase_shift:
-      select_sql = leadphase_sql
-    else: # 'lag'
-      select_sql = lagphase_sql
-    dates = [r[0] for r in db.execute(select_sql, (str(args.target_date), args.N))]
-    sorted_idx = np.argsort([int(Date(i)) for i in dates])
+      query = table.date >= args.target_date.timestamp()
+      retval = db(query).select(orderby=table.date, limitby=(0, args.N))
+      dates = [Date(r.date, tstmp=True) for r in retval]
+    elif 'lag' == args.phase_shift: # 'lag'
+      query = table.date <= args.target_date.timestamp()
+      retval = db(query).select(orderby=~table.date, limitby=(0, args.N))
+      dates = [Date(r.date, tstmp=True) for r in retval]
+    sorted_idx = np.argsort([int(i) for i in dates])
     dates = np.array(dates)[sorted_idx]
     return dates, False, {}
 
   def check_update(self, db, last_args=None):
     table = db[self.name]
-    date_field = table.date
-    db_max_str = db().select(date_field.max())[0][date_field.max()]
-    db_min_str = db().select(date_field.min())[0][date_field.min()]
+    db_max_str = db().select(table.date.max())[0][table.date.max()]
+    db_min_str = db().select(table.date.min())[0][table.date.min()]
 
     if not db_max_str:
       fetch_date = valid_dates.TWSE_FIRST_DAY

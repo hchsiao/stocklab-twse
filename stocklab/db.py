@@ -35,6 +35,7 @@ class get_db(pydal.DAL, ContextDecorator):
   
   def declare_table(self, name, schema):
     def _field(name, config):
+      assert name != 'id', 'pyDAL reserved this name'
       _cfg = config.copy()
       try: # pop-out params not used by pyDAL
         _cfg.pop('key')
@@ -44,12 +45,7 @@ class get_db(pydal.DAL, ContextDecorator):
       return pydal.Field(name, **_cfg)
     fields = [_field(field_name, schema[field_name])
         for field_name in schema.keys()]
-
-    key_fields = _get_keys(schema)
-    if key_fields:
-      self.define_table(name, primarykey=key_fields, *fields)
-    else:
-      self.define_table(name, *fields)
+    self.define_table(name, *fields)
 
   def update(self, mod, res):
     assert type(res) is list
@@ -68,6 +64,7 @@ class get_db(pydal.DAL, ContextDecorator):
           }
       processed = cfg['pre_proc'](val) if 'pre_proc' in cfg else val
       if field_type in type_map.keys():
+        # TODO: None should also be allowed
         assert type(processed) is type_map[field_type], 'type error in DB insertion.' +\
             f' Field {key} requires {field_type}, got {type(processed)}'
       return processed
@@ -76,7 +73,7 @@ class get_db(pydal.DAL, ContextDecorator):
     for rec in res:
       rec = {k:_proc(k, v) for k, v in rec.items()}
 
-      if ignore_existed: # TODO: test this case
+      if ignore_existed:
         key_fields = _get_keys(schema)
         queries = [table[k] == v for k, v in rec.items() if k in key_fields]
         assert len(key_fields) > 0

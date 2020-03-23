@@ -2,13 +2,14 @@ import requests
 import json
 from bs4 import BeautifulSoup
 import bs4
+from datetime import datetime
 
 import stocklab
 import stocklab.states
 from stocklab.date import Date, datetime_to_timestamp
 from stocklab.error import NoLongerAvailable
 
-SRC = 'cnyes'
+SRC = 'pchome' # TODO: cnyes has updated their website
 
 class TransactionCrawler(stocklab.Crawler):
   def __init__(self):
@@ -80,25 +81,17 @@ class TransactionCrawler(stocklab.Crawler):
       dt = datetime.strptime(f'1970-01-01 {s}', '%Y-%m-%d %H:%M:%S')
       return datetime_to_timestamp(dt)
     result = []
-    last_t = None
     for time_str, buy, sell, deal, vol in retval:
       curr_t = t(time_str)
-      if last_t is not None and last_t == curr_t:
-        result[-1]['buy'] += f(buy)
-        result[-1]['sell'] += f(sell)
-        result[-1]['deal'] += f(deal)
-        result[-1]['volume'] += int(vol)
-      else:
-        last_t = curr_t
-        result.append({
-          'stock_id': stock_id,
-          'date': trade_date,
-          'time': curr_t,
-          'buy': f(buy),
-          'sell': f(sell),
-          'deal': f(deal),
-          'volume': int(vol)
-          })
+      result.append({
+        'stock_id': stock_id,
+        'date': trade_date,
+        'time': curr_t,
+        'buy': f(buy),
+        'sell': f(sell),
+        'deal': f(deal),
+        'volume': int(vol)
+        })
     if not result:
       result.append({
         'stock_id': stock_id,

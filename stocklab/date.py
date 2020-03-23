@@ -66,6 +66,7 @@ class Date:
     return int(self.datetime.strftime('%Y%m%d'))
 
   def __eq__(self, other):
+    assert type(other) is Date
     return int(self) == int(other)
 
   def __lt__(self, other):

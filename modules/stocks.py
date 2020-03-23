@@ -8,11 +8,11 @@ class stocks(stocklab.MetaModule):
       'args': [
         ('mode', ['get', 'count']),
         ('type_id', str),
-        ('id', int),
+        ('internal_id', int),
         ],
       'schema': {
         'type_id': {'key': True},
-        'id': {'type': 'integer', 'key': True},
+        'internal_id': {'type': 'integer', 'key': True},
         'stock_id': {},
         'name': {},
         }
@@ -33,7 +33,7 @@ class stocks(stocklab.MetaModule):
   def query_db(self, db, args):
     table = db[self.name]
     if args.mode == 'count':
-      assert args.id == None
+      assert args.internal_id == None
       query = table.type_id == args.type_id
       retval = db(query).count()
       return retval, False, {}
@@ -42,7 +42,7 @@ class stocks(stocklab.MetaModule):
       targets = [row for row in type_rows if row.type_id == args.type_id]
       assert len(targets) == 1
       query = table.type_id == args.type_id
-      query &= table.id == args.id
+      query &= table.internal_id == args.internal_id
       retval = db(query).select()
       type_id = targets[0].type_id
       type_name = targets[0].name

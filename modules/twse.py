@@ -40,4 +40,4 @@ class twse(stocklab.Module):
     if retval:
       return retval[0], False, {'date': args.date, 'stock_id': args.stock_id}
     else:
-      return None, False, {'date': args.date, 'stock_id': args.stock_id}
+      return None, True, {'date': args.date, 'stock_id': args.stock_id}

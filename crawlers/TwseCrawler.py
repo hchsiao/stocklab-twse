@@ -120,7 +120,7 @@ class TwseCrawler(stocklab.Crawler):
           }
 
     retval = [transform(*cells) for cells in jsn['data']]
-    if str(date) not in [r[1] for r in retval]:
+    if date not in [r['date'] for r in retval]:
       raise InvalidDateRequested('Please wait until the market close.'+
           + 'Make sure the date requested is not holiday.',
           {'date': date, 'stock_id': stock_id})
@@ -151,7 +151,7 @@ class TwseCrawler(stocklab.Crawler):
         stock_id, stock_name = s.split('\t')
         retvals.append({
           'type_id': type_id,
-          'id': _id,
+          'internal_id': _id,
           'stock_id': stock_id,
           'name': stock_name
           })
