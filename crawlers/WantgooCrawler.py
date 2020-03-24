@@ -112,15 +112,15 @@ class WantgooCrawler(stocklab.Crawler):
         )
 
     if not info: # wantgoo returns empty list if the request is invalid
-      return [(
-            stock_id,
-            str(date),
-            None,
-            None,
-            None,
-            None,
-            None,
-          )]
+      return [{
+        'stock_id': stock_id,
+        'date': date,
+        'broker_id': None,
+        'buy_amt': None,
+        'sell_amt': None,
+        'buy_price': None,
+        'sell_price': None,
+        }]
 
     def to_int(s):
       f = to_float(s)
