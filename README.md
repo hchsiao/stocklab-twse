@@ -1,5 +1,6 @@
 ## TODO
-- detect timeout (using requests) in TransactionCrawler.py
+- detect timeout (using requests) in TransactionCrawler.py, impl. speed limit
+- unify retry & speed limit for crawlers
 - crawler detect abnormal result (e.g. all empty)
 - import stocklab.intepreter as sl
 - ignore_existed and update_existed
