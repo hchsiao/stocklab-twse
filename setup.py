@@ -9,8 +9,8 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='stocklab',
-    version='0.0.1',
-    description='A Python project', # TODO
+    version='0.1.1',
+    description='A modular python programming interface to access financial data from various sources.',
 
     long_description=long_description,
     long_description_content_type='text/markdown',

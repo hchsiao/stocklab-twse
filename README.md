@@ -1,14 +1,12 @@
 ## TODO
-- use colab to test new interface
-- optimize wantgoo crawler
-- grep -r 'TODO' .
+- detect timeout (using requests) in TransactionCrawler.py
+- crawler detect abnormal result (e.g. all empty)
+- import stocklab.intepreter as sl
+- ignore_existed and update_existed
 
 - implement time_to_crawl(datetime, db)
 - merge old db (only broker_deals)
-- crawler detect abnormal result (e.g. all empty)
 
-- import stocklab.intepreter as sl
-- ignore_existed and update_existed
 - distrubute as bundles (stocklab_core, twse_bundle, ...), de-couple
 - maintain 'day_off' tab (stop trade for only few days)
 

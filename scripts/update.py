@@ -4,7 +4,7 @@ import stocklab
 stocklab.change_log_level(logging.DEBUG)
 
 def _crawl(stock_id):
-  date = '20200323'
+  date = '20200324'
   stocklab.evaluate(f'transactions.{stock_id}.{date}')
   stocklab.evaluate(f'twse.{stock_id}.{date}.open')
 

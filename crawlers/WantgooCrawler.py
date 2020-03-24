@@ -10,7 +10,7 @@ from stocklab.error import NoLongerAvailable, ParserError
 # Assumption: 2330 will have transactions everyday
 
 class WantgooCrawler(stocklab.Crawler):
-  MAX_SPEED = 0.8 # TODO: investigate its limit
+  MAX_SPEED = 5.0
   TICK = 0.01
   RETRY_PERIOD = 30
   DATA_VALID_DAYS = 30
