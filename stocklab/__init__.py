@@ -135,8 +135,6 @@ def _update(mod):
     db.declare_table(mod.name, type(mod).spec['schema'])
     while True:
       update_required, crawl_args = mod.check_update(db, last_args)
-      assert crawl_args != last_args, f'crawler got the same arguements ' + \
-          'from the last time (which is: {crawl_args})'
       last_args = crawl_args
       if update_required:
         mod.logger.info('meta miss')
