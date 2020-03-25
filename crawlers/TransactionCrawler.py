@@ -8,10 +8,18 @@ import stocklab
 import stocklab.states
 from stocklab.date import Date, datetime_to_timestamp
 from stocklab.error import NoLongerAvailable
+from stocklab.crawler import SpeedLimiterMixin, RetryMixin
 
 SRC = 'pchome' # TODO: cnyes has updated their website
 
-class TransactionCrawler(stocklab.Crawler):
+class TransactionCrawler(stocklab.Crawler, SpeedLimiterMixin, RetryMixin):
+  spec = {
+      'max_speed': 3.0,
+      'tick_period': 0.01,
+      'retry_period': 30,
+      'retry_limit': 3,
+      }
+
   def __init__(self):
     super().__init__()
     if 'cnyes' == SRC:
@@ -23,18 +31,19 @@ class TransactionCrawler(stocklab.Crawler):
 
   def _pchome(self, stock_id):
     url = f'http://stock.pchome.com.tw/stock/sto0/ock3/sid{stock_id}.html'
-    self.logger.info(f'loading: {url}')
-    # TODO: detect and retry when timeout
-    r = requests.post(url, data={'is_check': '1'})
-    page = r.text
+    self.logger.info(f'loading from pchome: {url}')
 
-    not_found = '查無此股票代號' in page
-    if not_found:
-      self.logger.info(f'no transaction record found')
-      exit()
-    
-    soup = BeautifulSoup(r.content, 'html5lib') # use html5lib to cope with the crappy html
-    assert soup.find(id='tb_chart') is not None # TODO will fail when timed out
+    def _crawl():
+      r = self.speed_limited_request(requests.post, url, data={'is_check': '1'}, timeout=30)
+      assert '查無此股票代號' not in r.text, 'invalid stock id'
+      soup = BeautifulSoup(r.content, 'html5lib') # use html5lib to cope with the crappy html
+      assert soup.find(id='tb_chart') is not None, 'request timed out?'
+      return soup
+
+    soup = self.retry_when_failed(_crawl,
+        lambda resps: True,
+        lambda resps: Exception()
+        )
     tab = soup.find(id="tb_chart").contents[0].contents
     retval = []
     for row in tab:
@@ -50,8 +59,14 @@ class TransactionCrawler(stocklab.Crawler):
     return retval
 
   def _cnyes(self, stock_id):
-    r = requests.get(f'https://traderoom.cnyes.com/tse/quote2FB_HTML5.aspx?code={stock_id}')
+    url = f'https://traderoom.cnyes.com/tse/quote2FB_HTML5.aspx?code={stock_id}'
+    self.logger.info(f'loading from cnyes: {url}')
     
+    r = self.retry_when_failed(
+        lambda: self.speed_limited_request(requests.get, url),
+        lambda resps: True,
+        lambda resps: Exception()
+        )
     soup = BeautifulSoup(r.content, 'html.parser')
     tab = soup.find(id="real_1").div.div.table.contents
     retval = []
@@ -102,4 +117,8 @@ class TransactionCrawler(stocklab.Crawler):
         'deal': None,
         'volume': None
         })
+
+    # abnormality detector
+    assert '2330' != stock_id or len(result) > 50, 'abnormality detected'
+
     return result

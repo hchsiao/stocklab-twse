@@ -8,7 +8,7 @@ from stocklab.date import Date
 from stocklab.error import NoLongerAvailable, ParserError
 from stocklab.crawler import SpeedLimiterMixin, RetryMixin
 
-# Assumption: 2330 will have transactions everyday
+# Assumption: 2330 (TSMC) will have transactions everyday
 
 class WantgooCrawler(stocklab.Crawler, SpeedLimiterMixin, RetryMixin):
   spec = {
@@ -150,4 +150,8 @@ class WantgooCrawler(stocklab.Crawler, SpeedLimiterMixin, RetryMixin):
       if s:
         retval.append(s)
       assert b or s
+
+    # abnormality detector
+    assert '2330' != stock_id or len(result) > 50, 'abnormality detected'
+
     return retval

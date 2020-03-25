@@ -9,14 +9,15 @@ import bs4
 import stocklab
 from stocklab.date import Date
 from stocklab.error import InvalidDateRequested, ParserError
-from stocklab.crawler import SpeedLimiterMixin
+from stocklab.crawler import SpeedLimiterMixin, RetryMixin
 
-class TwseCrawler(stocklab.Crawler, SpeedLimiterMixin):
+class TwseCrawler(stocklab.Crawler, SpeedLimiterMixin, RetryMixin):
   spec = {
-      'max_speed': 0.39, # default = 1.0
-      'tick_period': 0.01, # default
+      'max_speed': 0.39,
+      'tick_period': 0.01,
+      'retry_period': 5,
+      'retry_limit': 3,
       }
-  RETRY_LMT = 3 # TODO: use RetryMixin
 
   def __init__(self):
     super().__init__()
@@ -66,19 +67,15 @@ class TwseCrawler(stocklab.Crawler, SpeedLimiterMixin):
     url = 'https://www.twse.com.tw/exchangeReport/STOCK_DAY?'\
             + f'response=json&date={date_s}&stockNo={stock_id}'
 
-    for nth_try in range(TwseCrawler.RETRY_LMT + 1):
-      jsn = self._request(url)
-
-      try:
-        flag_test = jsn['stat'] == 'OK'
-        format_test = jsn['fields'] == ['日期', '成交股數', '成交金額', '開盤價', '最高價', '最低價', '收盤價', '漲跌價差', '成交筆數']
-      except KeyError:
-        flag_test = False
-        format_test = False
-      if flag_test and format_test:
-        break
-      if nth_try == TwseCrawler.RETRY_LMT:
-        raise ParserError('bad response', {'res': jsn})
+    jsn = self.retry_when_failed(
+        lambda: self._request(url),
+        lambda _json: 'stat' in _json and 'fields' in _json \
+            and _json['stat'] == 'OK' \
+            and _json['fields'] == [
+              '日期', '成交股數', '成交金額', '開盤價',
+              '最高價', '最低價', '收盤價', '漲跌價差', '成交筆數'],
+        lambda _json: ParserError('bad response', {'res': _json})
+        )
     
     # Parse
     data = jsn['data']
@@ -117,18 +114,12 @@ class TwseCrawler(stocklab.Crawler, SpeedLimiterMixin):
     date_s = str(fetch_date).replace('-', '')
     url = 'https://www.twse.com.tw/exchangeReport/FMTQIK?'\
             + f'response=json&date={date_s}'
-    for nth_try in range(TwseCrawler.RETRY_LMT + 1):
-      jsn = self._request(url)
-
-      try:
-        success = jsn['stat'] == 'OK'
-      except KeyError:
-        success = False
-      if success:
-        break
-      if nth_try == TwseCrawler.RETRY_LMT:
-        raise ParserError('bad response', {'res': jsn})
-
+    jsn = self.retry_when_failed(
+        lambda: self._request(url),
+        lambda _json: 'stat' in _json and 'data' in _json\
+            and _json['stat'] == 'OK',
+        lambda _json: ParserError('bad response', {'res': _json})
+        )
     return [{'date': Date(info[0])} for info in jsn['data']]
 
   def stock_codes(self, targets):

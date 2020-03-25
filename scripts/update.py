@@ -1,13 +1,13 @@
 import logging
 import stocklab
+from stocklab.date import Date
 
 stocklab.change_log_level(logging.DEBUG)
 
 def _crawl(stock_id):
-  date = '20200324'
-  #stocklab.evaluate(f'transactions.{stock_id}.{date}')
-  #stocklab.evaluate(f'twse.{stock_id}.{date}.open')
-
+  date = Date.today()
+  stocklab.evaluate(f'transactions.{stock_id}.{date}')
+  stocklab.evaluate(f'twse.{stock_id}.{date}.open')
   stocklab.evaluate(f'broker_deals.{stock_id}.{date}')
 
 def for_each_stock_id(cb):

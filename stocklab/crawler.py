@@ -31,7 +31,15 @@ class RetryMixin(object):
 
   def retry_when_failed(self, do_cb, success_cb, error_cb):
     for nth_try in range(self.spec['retry_limit'] + 1):
-      res = do_cb()
+      try:
+        res = do_cb()
+      except Exception as e:
+        if nth_try < self.spec['retry_limit']:
+          self.logger.info(f'got error: {e}, waiting for retry')
+          time.sleep(self.spec['retry_period'])
+          continue
+        else:
+          raise e
       if success_cb(res):
         return res
       self.logger.info('got wrong data, waiting for retry')

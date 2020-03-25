@@ -7,7 +7,7 @@ from stocklab.error import InvalidDateRequested
 class valid_dates(stocklab.MetaModule):
   TWSE_FIRST_DAY = Date('20100104')
   spec = {
-      'update_threshold': 1440,
+      'update_threshold': 720, # TODO: also consider current time, move threshoding into each module
       'ignore_existed': True,
       'crawler': 'TwseCrawler.dates',
       'args': [
