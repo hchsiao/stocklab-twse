@@ -15,3 +15,8 @@ class Crawler(metaclass=abc.ABCMeta):
     log_handler.setFormatter(log_format)
     self.logger.addHandler(log_handler)
     self.logger.setLevel(stocklab.log_level)
+    super().__init__()
+
+  @property
+  def spec(self):
+    return type(self).spec

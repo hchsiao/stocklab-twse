@@ -19,6 +19,11 @@ class Module(metaclass=abc.ABCMeta):
         for n in name_list[1:]:
           obj = getattr(obj, n)
         self.parser = obj
+    super().__init__()
+
+  @property
+  def spec(self):
+    return type(self).spec
 
   def evaluate(self, path):
     use_cache = 'disable_cache' not in self.spec or not self.spec['disable_cache']

@@ -9,35 +9,18 @@ import bs4
 import stocklab
 from stocklab.date import Date
 from stocklab.error import InvalidDateRequested, ParserError
+from stocklab.crawler import SpeedLimiterMixin
 
-class TwseCrawler(stocklab.Crawler):
-  MAX_SPEED = 0.39
-  TICK = 0.01
-  RETRY_LMT = 3
+class TwseCrawler(stocklab.Crawler, SpeedLimiterMixin):
+  spec = {
+      'max_speed': 0.39, # default = 1.0
+      'tick_period': 0.01, # default
+      }
+  RETRY_LMT = 3 # TODO: use RetryMixin
 
   def __init__(self):
     super().__init__()
-    self.reset()
     self.sess = cloudscraper.create_scraper()
-
-  def reset(self):
-    self.last_req = None
-
-  def speed(self):
-    if self.last_req is None:
-      return 0.0
-    now = time.time()
-    return 1.0 / (now - self.last_req)
-
-  def speed_limited_req(self, cb, *args, **kwargs):
-    speed = self.speed()
-    while self.speed() > TwseCrawler.MAX_SPEED:
-      time.sleep(TwseCrawler.TICK)
-      speed = self.speed()
-    retval = cb(*args, **kwargs)
-    self.logger.debug(f'Request sent, speed={speed}')
-    self.last_req = time.time()
-    return retval
 
   def _request(self, url, method='get', data={}, mode='json', speed_limit=True):
     assert mode in ['json', 'plain']
@@ -51,7 +34,7 @@ class TwseCrawler(stocklab.Crawler):
       try:
         self.logger.debug(url)
         if speed_limit:
-          r = self.speed_limited_req(_req, url, data=data)
+          r = self.speed_limited_request(_req, url, data=data)
         else:
           r = _req(url, data=data)
         page = r.text
