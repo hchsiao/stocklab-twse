@@ -10,6 +10,8 @@ modules_path = os.path.join(root_path, MODULE_DIR)
 crawlers_path = os.path.join(root_path, CRAWlER_DIR)
 data_path = os.path.join(root_path, DATA_DIR)
 
+force_offline = False
+
 import logging
 log_level = logging.INFO
 init_flag = False
@@ -95,6 +97,8 @@ def _create_singleton(prefix, name):
   scope[name] = singleton
 
 def get_module(module_name):
+  if not init_flag:
+    _init()
   global _metamodules, _modules, modules_path
   if module_name in _metamodules:
     return _metamodules[module_name]
@@ -103,6 +107,8 @@ def get_module(module_name):
   return _modules[module_name]
 
 def get_crawler(crawler_name):
+  if not init_flag:
+    _init()
   global _crawlers, crawlers_path
   if crawler_name not in _crawlers:
     _create_singleton(crawlers_path, crawler_name)
@@ -127,12 +133,12 @@ def evaluate(path):
 
 import stocklab.utils
 def _update(mod):
-  thres = type(mod).spec['update_threshold']
+  thres = mod.spec['update_threshold']
   if not stocklab.utils.is_outdated_since_last_update(mod.name, thres):
     return
   with get_db() as db:
     last_args = None
-    db.declare_table(mod.name, type(mod).spec['schema'])
+    db.declare_table(mod.name, mod.spec['schema'])
     while True:
       update_required, crawl_args = mod.check_update(db, last_args)
       last_args = crawl_args

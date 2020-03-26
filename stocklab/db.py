@@ -50,9 +50,12 @@ class get_db(pydal.DAL, ContextDecorator):
   def update(self, mod, res):
     assert type(res) is list
     assert all([type(rec) is dict for rec in res])
-    schema = type(mod).spec['schema']
-    ignore_existed = type(mod).spec['ignore_existed'] if \
-        'ignore_existed' in type(mod).spec else False
+    schema = mod.spec['schema']
+    ignore_existed = mod.spec['ignore_existed'] if \
+        'ignore_existed' in mod.spec else False
+    update_existed = mod.spec['update_existed'] if \
+        'update_existed' in mod.spec else False
+    assert not (ignore_existed and update_existed)
 
     def _proc(key, val):
       cfg = schema[key]
@@ -83,6 +86,8 @@ class get_db(pydal.DAL, ContextDecorator):
             return qs[0] & _and(qs[1:])
         if not self[mod.name](_and(queries)):
           self[mod.name].insert(**rec)
+      elif update_existed:
+        self[mod.name].update_or_insert(**rec)
       else:
         self[mod.name].insert(**rec)
     self.commit()

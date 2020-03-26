@@ -4,7 +4,6 @@ import logging
 import stocklab
 class Module(metaclass=abc.ABCMeta):
   def __init__(self):
-    self.name = type(self).__name__
     self.cache = {}
     self.logger = stocklab.create_logger(self.name)
 
@@ -22,6 +21,10 @@ class Module(metaclass=abc.ABCMeta):
     super().__init__()
 
   @property
+  def name(self):
+    return type(self).__name__
+
+  @property
   def spec(self):
     return type(self).spec
 
@@ -34,7 +37,7 @@ class Module(metaclass=abc.ABCMeta):
       assert self.name == mod_name
       args_list = tuple(path.split('.')[1:])
       try:
-        arg_spec = type(self).spec['args']
+        arg_spec = self.spec['args']
       except:
         self.logger.error("Cannot find attribute: spec")
         return None
@@ -52,10 +55,11 @@ class Module(metaclass=abc.ABCMeta):
   def access_db(self, args):
     query_res = None
     with stocklab.get_db() as db:
-      db.declare_table(self.name, type(self).spec['schema'])
+      db.declare_table(self.name, self.spec['schema'])
       while True:
         query_res, db_miss, crawl_args = self.query_db(db, args)
         if db_miss:
+          assert not stocklab.force_offline
           self.logger.info('db miss')
           res = self.parser(**crawl_args)
           db.update(self, res)

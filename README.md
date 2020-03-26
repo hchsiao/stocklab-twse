@@ -1,9 +1,7 @@
 ## TODO
-- import stocklab.intepreter as sl
-- ignore_existed and update_existed
-
+- consider current time when checking the need to update
 - implement time_to_crawl(datetime, db)
-- merge old db (only broker_deals)
+- merge old db (see colab)
 
 - distrubute as bundles (stocklab_core, twse_bundle, ...), de-couple
 - maintain 'day_off' tab (stop trade for only few days)
@@ -27,4 +25,4 @@
 - do not care about ETF and the like
 - stocklab expressions cannot contain curly-braces
 - d_last_date := (will be updated after market opened not after closed)
-- a single underscore in the expression means dont-care
+- a single underscore in the expression means dont-care, otherwise expressions cannot start/end with underscore
