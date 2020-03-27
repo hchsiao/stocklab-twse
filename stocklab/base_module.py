@@ -2,6 +2,7 @@ import abc
 import logging
 
 import stocklab
+from stocklab.error import NoLongerAvailable
 class Module(metaclass=abc.ABCMeta):
   def __init__(self):
     self.cache = {}
@@ -59,8 +60,10 @@ class Module(metaclass=abc.ABCMeta):
       while True:
         query_res, db_miss, crawl_args = self.query_db(db, args)
         if db_miss:
-          assert not stocklab.force_offline
           self.logger.info('db miss')
+          if stocklab.force_offline:
+            raise NoLongerAvailable('Please unset' +\
+                'force_offline option to enable crawlers')
           res = self.parser(**crawl_args)
           db.update(self, res)
         else:

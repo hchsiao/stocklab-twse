@@ -1,6 +1,7 @@
 import logging
 import stocklab
 from stocklab.date import Date
+from stocklab.error import NoLongerAvailable
 
 stocklab.change_log_level(logging.DEBUG)
 
@@ -26,4 +27,27 @@ def for_each_stock_id(cb):
         continue
       cb(stock_id)
 
-for_each_stock_id(_crawl)
+def check_update(mod_name, date):
+  # TODO: handle table-not-exist
+  assert type(date) is Date
+  def _cb(stock_id):
+    stocklab.evaluate(f'{mod_name}.{stock_id}.{date}')
+
+  state_key = f'{mod_name}__db_latest_date'
+  state = stocklab.get_state(state_key)
+  if state:
+    db_date = Date(state, tstmp=True)
+    if db_date >= date:
+      return True
+
+  stocklab.force_offline = True
+  try:
+    for_each_stock_id(_cb)
+  except NoLongerAvailable as e:
+    return False
+
+  stocklab.set_state(state_key, str(date.timestamp()))
+  return True
+
+volatile_modules = ['transactions', 'broker_deals']
+#for_each_stock_id(_crawl)
