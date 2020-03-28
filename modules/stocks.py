@@ -2,7 +2,7 @@ import stocklab
 
 class stocks(stocklab.MetaModule):
   spec = {
-      'update_threshold': 1440,
+      'update_offset': (9, 0),
       'ignore_existed': True,
       'crawler': 'TwseCrawler.stock_codes',
       'args': [

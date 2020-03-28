@@ -1,5 +1,5 @@
 import stocklab
-from stocklab.date import Date
+from stocklab.datetime import Date
 import numpy as np
 
 class myma(stocklab.Module):

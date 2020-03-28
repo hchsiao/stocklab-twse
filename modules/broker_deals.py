@@ -1,9 +1,10 @@
 import time
 import stocklab
-from stocklab.date import Date, date_to_timestamp
+from stocklab.datetime import Date, date_to_timestamp
 
 class broker_deals(stocklab.Module):
   spec = {
+      'update_offset': (17, 0),
       'disable_cache': True,
       'crawler': 'WantgooCrawler.brokers',
       'args': [

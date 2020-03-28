@@ -1,5 +1,5 @@
 import stocklab
-from stocklab.date import Date
+from stocklab.datetime import Date
 import logging
 
 _table_name = 'stocklab__states'

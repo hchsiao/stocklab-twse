@@ -1,4 +1,4 @@
-from stocklab.date import Date
+from stocklab.datetime import Date
 
 class ExceptionWithInfo(Exception):
   def __init__(self, message, info):

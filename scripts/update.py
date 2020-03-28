@@ -1,15 +1,10 @@
 import logging
 import stocklab
-from stocklab.date import Date
+from stocklab.datetime import Date
 from stocklab.error import NoLongerAvailable
+from stocklab.utils import *
 
 stocklab.change_log_level(logging.DEBUG)
-
-def _crawl(stock_id):
-  date = Date.today()
-  stocklab.evaluate(f'transactions.{stock_id}.{date}')
-  stocklab.evaluate(f'twse.{stock_id}.{date}.open')
-  stocklab.evaluate(f'broker_deals.{stock_id}.{date}')
 
 def for_each_stock_id(cb):
   # all types
@@ -27,27 +22,37 @@ def for_each_stock_id(cb):
         continue
       cb(stock_id)
 
-def check_update(mod_name, date):
-  # TODO: handle table-not-exist
+def up_to_date(mod_name, table_may_not_exist=True):
   assert type(date) is Date
   def _cb(stock_id):
     stocklab.evaluate(f'{mod_name}.{stock_id}.{date}')
 
-  state_key = f'{mod_name}__db_latest_date'
-  state = stocklab.get_state(state_key)
-  if state:
-    db_date = Date(state, tstmp=True)
-    if db_date >= date:
-      return True
+  if not is_outdated(mod_name):
+    return True
 
+  _force_offline = stocklab.force_offline
   stocklab.force_offline = True
   try:
     for_each_stock_id(_cb)
   except NoLongerAvailable as e:
     return False
+  except Exception as e:
+    # since exception types depend on DB
+    # it is hard to track every possible types
+    if table_may_not_exist:
+      # This also hides other error
+      return False
+    else:
+      raise e
+  finally:
+    stocklab.force_offline = _force_offline
 
-  stocklab.set_state(state_key, str(date.timestamp()))
+  set_last_update_datetime(mod_name)
   return True
 
-volatile_modules = ['transactions', 'broker_deals']
-#for_each_stock_id(_crawl)
+volatile = ['transactions', 'broker_deals']
+date = Date.today()
+for mod_name in volatile:
+  _crawl = lambda sid: stocklab.evaluate(f'{mod_name}.{sid}.{date}')
+  if not up_to_date(mod_name, date):
+    for_each_stock_id(_crawl)

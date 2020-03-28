@@ -1,10 +1,9 @@
 from datetime import datetime, timedelta
 import stocklab
-import calendar
+from stocklab.datetime import datetime_to_timestamp, now, update_required
 
 def set_last_update_datetime(mod_name):
-  last_update_time = datetime.now()
-  tstmp = calendar.timegm(last_update_time.timetuple())
+  tstmp = datetime_to_timestamp(now())
   stocklab.set_state(f'{mod_name}__t_last_update', str(tstmp))
 
 def last_update_datetime(mod_name):
@@ -14,11 +13,17 @@ def last_update_datetime(mod_name):
   else:
     return None
 
-def is_outdated_since_last_update(mod_name, threshold_minute):
+def is_outdated(mod_name):
+  kwargs = {}
+  if mod_name:
+    spec = stocklab.get_module(mod_name).spec
+    if 'update_offset' in spec:
+      kwargs['offset'] = spec['update_offset']
+    if 'update_period' in spec:
+      kwargs['period'] = spec['update_period']
+
   last_update = last_update_datetime(mod_name)
   if last_update:
-    threshold = timedelta(minutes=threshold_minute)
-    time_elapsed = datetime.now() - last_update
-    return time_elapsed > threshold
+    return update_required(last_update, **kwargs)
   else:
     return True

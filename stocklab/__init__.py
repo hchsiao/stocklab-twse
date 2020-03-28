@@ -133,8 +133,7 @@ def evaluate(path):
 
 import stocklab.utils
 def _update(mod):
-  thres = mod.spec['update_threshold']
-  if not stocklab.utils.is_outdated_since_last_update(mod.name, thres):
+  if not stocklab.utils.is_outdated(mod.name):
     return
   with get_db() as db:
     last_args = None
@@ -143,6 +142,9 @@ def _update(mod):
       update_required, crawl_args = mod.check_update(db, last_args)
       last_args = crawl_args
       if update_required:
+        if stocklab.force_offline:
+          raise NoLongerAvailable('Please unset' +\
+              'force_offline option to enable crawlers')
         mod.logger.info('meta miss')
         res = mod.parser(**crawl_args)
         db.update(mod, res)
@@ -175,8 +177,3 @@ def _init():
   for m in _metamodules.keys():
     mod = _metamodules[m]
     _update(mod)
-
-  if stocklab.utils.is_outdated_since_last_update('', 120):
-    stocklab.utils.set_last_update_datetime('')
-    last_trade_date = get_crawler('TwseCrawler')._last_trade_date()
-    set_state('d_last_trade', str(last_trade_date.timestamp()))

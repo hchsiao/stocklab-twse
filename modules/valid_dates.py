@@ -1,13 +1,13 @@
 import numpy as np
 
 import stocklab
-from stocklab.date import Date, date_to_timestamp
+from stocklab.datetime import Date, date_to_timestamp
 from stocklab.error import InvalidDateRequested
 
 class valid_dates(stocklab.MetaModule):
   TWSE_FIRST_DAY = Date('20100104')
   spec = {
-      'update_threshold': 720, # TODO: also consider current time, move threshoding into each module
+      'update_offset': (13, 40),
       'ignore_existed': True,
       'crawler': 'TwseCrawler.dates',
       'args': [

@@ -6,7 +6,7 @@ from datetime import datetime
 
 import stocklab
 import stocklab.states
-from stocklab.date import Date, datetime_to_timestamp
+from stocklab.datetime import Date, datetime_to_timestamp
 from stocklab.error import NoLongerAvailable
 from stocklab.crawler import SpeedLimiterMixin, RetryMixin
 
@@ -91,7 +91,7 @@ class TransactionCrawler(stocklab.Crawler, SpeedLimiterMixin, RetryMixin):
       if '--' == s:
         return None
       return 0 if s == '' else float(s)
-    def t(s):
+    def t(s): # TODO: implement Time() in stocklab/datetime.py
       assert len(s.split(':')) == 3
       dt = datetime.strptime(f'1970-01-01 {s}', '%Y-%m-%d %H:%M:%S')
       return datetime_to_timestamp(dt)

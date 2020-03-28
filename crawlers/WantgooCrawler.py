@@ -4,7 +4,7 @@ import time
 import re
 
 import stocklab
-from stocklab.date import Date
+from stocklab.datetime import Date
 from stocklab.error import NoLongerAvailable, ParserError
 from stocklab.crawler import SpeedLimiterMixin, RetryMixin
 
@@ -152,6 +152,6 @@ class WantgooCrawler(stocklab.Crawler, SpeedLimiterMixin, RetryMixin):
       assert b or s
 
     # abnormality detector
-    assert '2330' != stock_id or len(result) > 50, 'abnormality detected'
+    assert '2330' != stock_id or len(retval) > 50, 'abnormality detected'
 
     return retval

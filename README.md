@@ -1,10 +1,7 @@
 ## TODO
-- consider current time when checking the need to update
-- implement time_to_crawl(datetime, db)
 - merge old db (see colab)
-
-- distrubute as bundles (stocklab_core, twse_bundle, ...), de-couple
-- maintain 'day_off' tab (stop trade for only few days)
+- add config file, isolate stocklab_core
+  - configurable: db, timezone, force_offline
 
 ## TODO: Main objective (to predict)
 - (exist/never) k-(higher/lower) than current price within N-days

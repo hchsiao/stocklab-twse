@@ -1,5 +1,5 @@
 import stocklab
-from stocklab.date import Date, date_to_timestamp
+from stocklab.datetime import Date, date_to_timestamp
 
 class twse(stocklab.Module):
   ATTR_NAMES = ['delta_n_share', 'delta_price_share', \

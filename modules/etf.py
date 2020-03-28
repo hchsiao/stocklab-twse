@@ -1,5 +1,5 @@
 import stocklab
-from stocklab.date import date_to_timestamp
+from stocklab.datetime import date_to_timestamp
 
 class etf(stocklab.MetaModule):
   spec = {
