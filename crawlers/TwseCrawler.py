@@ -112,8 +112,6 @@ class TwseCrawler(stocklab.Crawler, SpeedLimiterMixin, RetryMixin):
     return retval
 
   def dates(self, fetch_date):
-    set_state('d_last_trade', str(self._last_trade_date().timestamp()))
-
     date_s = str(fetch_date).replace('-', '')
     url = 'https://www.twse.com.tw/exchangeReport/FMTQIK?'\
             + f'response=json&date={date_s}'

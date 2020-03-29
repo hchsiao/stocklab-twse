@@ -6,14 +6,14 @@ from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 import calendar
 
-offset = 8 # TWSE: GMT+8
+import stocklab
 
 def datetime_to_timestamp(dt):
   return int(calendar.timegm(dt.timetuple()))
 
 def now():
   _offset = timedelta(seconds=time.timezone)
-  return datetime.now() + _offset + timedelta(hours=offset)
+  return datetime.now() + _offset + timedelta(hours=stocklab.timezone_offset)
 
 @functools.total_ordering
 class Date:

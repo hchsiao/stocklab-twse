@@ -1,7 +1,7 @@
 import logging
 import stocklab
 from stocklab.datetime import Date
-from stocklab.error import NoLongerAvailable
+from stocklab.error import NoLongerAvailable, InvalidDateRequested
 from stocklab.utils import *
 
 stocklab.change_log_level(logging.DEBUG)
@@ -52,7 +52,12 @@ def up_to_date(mod_name, table_may_not_exist=True):
 
 volatile = ['transactions', 'broker_deals']
 date = Date.today()
-for mod_name in volatile:
-  _crawl = lambda sid: stocklab.evaluate(f'{mod_name}.{sid}.{date}')
-  if not up_to_date(mod_name, date):
-    for_each_stock_id(_crawl)
+try:
+  stocklab.metaevaluate(f'valid_dates.{date}.1.lag')
+  for mod_name in volatile:
+    _crawl = lambda sid: stocklab.evaluate(f'{mod_name}.{sid}.{date}')
+    if not up_to_date(mod_name, date):
+      for_each_stock_id(_crawl)
+except InvalidDateRequested:
+  print('weekend or holiday')
+  pass

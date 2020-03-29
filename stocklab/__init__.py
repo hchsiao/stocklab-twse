@@ -11,6 +11,7 @@ crawlers_path = os.path.join(root_path, CRAWlER_DIR)
 data_path = os.path.join(root_path, DATA_DIR)
 
 force_offline = False
+timezone_offset = 8 # TWSE: GMT+8
 
 import logging
 log_level = logging.INFO

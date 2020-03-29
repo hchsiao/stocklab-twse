@@ -1,0 +1,14 @@
+---
+config_name: stocklab-twse
+force_offline: false
+timezone_offset: 8
+root_dir: "./"
+database:
+  type: mssql
+  url: dburl
+  user: user
+  password: pw
+cache:
+  type: sqlite
+  url: "./app_data"
+
