@@ -57,8 +57,6 @@ class valid_dates(stocklab.MetaModule):
     return dates, False, {}
 
   def check_update(self, db, last_args=None):
-    set_state('d_last_trade', str(self._last_trade_date().timestamp()))
-
     table = db[self.name]
     db_max_str = db().select(table.date.max())[0][table.date.max()]
     db_min_str = db().select(table.date.min())[0][table.date.min()]

@@ -71,23 +71,25 @@ class get_db(pydal.DAL, ContextDecorator):
             f' Field {key} requires {field_type}, got {type(processed)}'
       return processed
 
+    def _key_q(schema):
+      key_fields = _get_keys(schema)
+      queries = [table[k] == v for k, v in rec.items() if k in key_fields]
+      assert len(key_fields) > 0
+      def _and(qs):
+        if len(qs) == 1:
+          return qs[0]
+        else:
+          return qs[0] & _and(qs[1:])
+      return _and(queries)
+
     table = self[mod.name]
     for rec in res:
       rec = {k:_proc(k, v) for k, v in rec.items()}
-
       if ignore_existed:
-        key_fields = _get_keys(schema)
-        queries = [table[k] == v for k, v in rec.items() if k in key_fields]
-        assert len(key_fields) > 0
-        def _and(qs):
-          if len(qs) == 1:
-            return qs[0]
-          else:
-            return qs[0] & _and(qs[1:])
-        if not self[mod.name](_and(queries)):
+        if not self[mod.name](_key_q(schema)):
           self[mod.name].insert(**rec)
       elif update_existed:
-        self[mod.name].update_or_insert(**rec)
+        self[mod.name].update_or_insert(_key_q(schema), **rec)
       else:
         self[mod.name].insert(**rec)
     self.commit()

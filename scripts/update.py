@@ -10,7 +10,7 @@ def for_each_stock_id(cb):
   # all types
   type_ids = [row.type_id for row in stocklab.metaevaluate('stock_types')]
   type_names = [row.name for row in stocklab.metaevaluate('stock_types')]
-  
+
   suspended = [row.stock_id for row in stocklab.metaevaluate('suspended')]
   for type_id in type_ids:
     type_count = stocklab.metaevaluate(f'stocks.count.{type_id}._')

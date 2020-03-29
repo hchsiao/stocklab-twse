@@ -1,7 +1,7 @@
 ## TODO
 - merge old db (see colab)
-- add config file, isolate stocklab_core
-  - configurable: db, timezone, force_offline
+- isolate stocklab-core
+- make use of config.yaml
 
 ## TODO: Main objective (to predict)
 - (exist/never) k-(higher/lower) than current price within N-days

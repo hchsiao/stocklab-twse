@@ -18,12 +18,24 @@ class Expr:
 
     new_argv = self.argv + [attr.lstrip('_')]
     new_expr = Expr(new_argv, meta=self.meta)
-    if self.arg_len and self.arg_len == len(self.argv):
+
+    def _eval(expr):
       if self.meta:
-        return stocklab.metaevaluate(str(new_expr))
+        return stocklab.metaevaluate(str(expr))
       else:
-        return stocklab.evaluate(str(new_expr))
+        return stocklab.evaluate(str(expr))
+
+    # For modules that do not require args
+    if not self.arg_len:
+      mod_name = new_argv[0]
+      if len(stocklab.get_module(mod_name).spec['args']) == 0:
+        return _eval(new_expr)
+
+    if self.arg_len and self.arg_len == len(self.argv):
+      # evaluate the expression when all args presents
+      return _eval(new_expr)
     else:
+      # otherwise keep building the expression
       return new_expr
 
   def __getitem__(self, key):

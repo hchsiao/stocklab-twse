@@ -7,7 +7,6 @@ from bs4 import BeautifulSoup
 import bs4
 
 import stocklab
-from stocklab import set_state
 from stocklab.datetime import Date
 from stocklab.error import InvalidDateRequested, ParserError
 from stocklab.crawler import SpeedLimiterMixin, RetryMixin
@@ -198,8 +197,8 @@ class TwseCrawler(stocklab.Crawler, SpeedLimiterMixin, RetryMixin):
         retval.append({'stock_id': str(_sid), 'date': Date(_date)})
     return retval
 
-  def _last_trade_date(self):
+  def last_trade_date(self):
     url = 'https://mis.twse.com.tw/stock/data/mis_IDX.txt'
     res = self._request(url)
     date_str = res['msgArray'][0]['d']
-    return Date(date_str)
+    return [{'dummy_id': '1', 'date': Date(date_str)}]

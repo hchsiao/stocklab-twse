@@ -1,7 +1,7 @@
 ---
 config_name: stocklab-twse
 force_offline: false
-timezone_offset: 8
+timezone_offset: 8 # Taiwan timezone: GMT+8
 root_dir: "./"
 database:
   type: mssql

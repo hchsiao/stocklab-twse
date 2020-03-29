@@ -81,7 +81,7 @@ class TransactionCrawler(stocklab.Crawler, SpeedLimiterMixin, RetryMixin):
     # Check date validity (TODAY will be valid after the market closed)
     stocklab.metaevaluate(f'valid_dates.{date}.1.lag')
     # Check the date requested matches data on the website
-    trade_date = Date(stocklab.states.get('d_last_trade'), tstmp=True)
+    trade_date = stocklab.metaevaluate('last_trade_date')
     if date != trade_date:
       raise NoLongerAvailable('Requested date not available. Unless another source of data are found')
 
