@@ -44,5 +44,6 @@ setup(
         'requests',
         'cloudscraper',
         'pyDAL',
+        'pyyaml',
         ],
 )

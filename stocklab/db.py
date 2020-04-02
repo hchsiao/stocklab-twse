@@ -2,12 +2,6 @@ import pydal
 from contextlib import ContextDecorator
 
 import stocklab
-CACHE_FILE = "cache.sqlite"
-DATABASE_FILE = "db.sqlite"
-
-import os
-db_path = os.path.join(stocklab.data_path, DATABASE_FILE)
-cache_path = os.path.join(stocklab.data_path, CACHE_FILE)
 
 def _get_keys(schema):
   return [field_name
@@ -16,14 +10,25 @@ def _get_keys(schema):
       ]
 
 class get_db(pydal.DAL, ContextDecorator):
-  def __init__(self, *args, **kwargs):
+  def __init__(self, config_name, *args, **kwargs):
     self.__args = args
     self.__kwargs = kwargs
-    self.__kwargs['folder'] = stocklab.data_path
+    self.config = stocklab.config[config_name]
     self.logger = stocklab.create_logger('stocklab_db')
 
   def __enter__(self):
-    uri = f'sqlite://{db_path}'
+    assert self.config['type'] in ['sqlite', 'mssql']
+    if self.config['type'] == 'sqlite':
+      import os
+      db_path = os.path.join(stocklab.data_path, self.config['filename'])
+      uri = f'sqlite://{db_path}'
+      self.__kwargs['folder'] = stocklab.data_path
+    elif self.config['type'] == 'mssql':
+      url = self.config['url']
+      user = self.config['user']
+      password = self.config['password']
+      driver = self.config['driver']
+      uri = f'mssql4://{user}:{password}@{url}/stocklab-db?driver={driver}'
     super().__init__(uri=uri, *self.__args, **self.__kwargs)
     return self
 

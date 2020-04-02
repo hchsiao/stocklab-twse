@@ -1,21 +1,22 @@
+CONFIG_FILE = "config.yaml"
 MODULE_DIR = "./modules/"
 CRAWlER_DIR = "./crawlers/"
 DATA_DIR = "./app_data/"
 
 import importlib.util
 import os
-root_path = importlib.util.find_spec(__name__).origin
-root_path = os.path.abspath(root_path + "/../../")
-modules_path = os.path.join(root_path, MODULE_DIR)
-crawlers_path = os.path.join(root_path, CRAWlER_DIR)
-data_path = os.path.join(root_path, DATA_DIR)
+exec_path = os.path.abspath('.')
+config_path = os.path.join(exec_path, CONFIG_FILE)
 
-force_offline = False
-timezone_offset = 8 # TWSE: GMT+8
+_init_flag = False
+config = None
+
+modules_path = None
+crawlers_path = None
+data_path = None
 
 import logging
 log_level = logging.INFO
-init_flag = False
 _logger = None
 
 _loggers = {}
@@ -76,7 +77,7 @@ def change_log_level(level):
   for m in _tmp.values():
     m.logger.setLevel(level)
 
-  if not init_flag:
+  if not _init_flag:
     _init()
 
 def _create_singleton(prefix, name):
@@ -98,7 +99,7 @@ def _create_singleton(prefix, name):
   scope[name] = singleton
 
 def get_module(module_name):
-  if not init_flag:
+  if not _init_flag:
     _init()
   global _metamodules, _modules, modules_path
   if module_name in _metamodules:
@@ -108,7 +109,7 @@ def get_module(module_name):
   return _modules[module_name]
 
 def get_crawler(crawler_name):
-  if not init_flag:
+  if not _init_flag:
     _init()
   global _crawlers, crawlers_path
   if crawler_name not in _crawlers:
@@ -116,7 +117,7 @@ def get_crawler(crawler_name):
   return _crawlers[crawler_name]
 
 def _eval(path):
-  if not init_flag:
+  if not _init_flag:
     _init()
   assert '{' not in path
   assert '}' not in path
@@ -124,7 +125,7 @@ def _eval(path):
   return mod.evaluate(path)
 
 def evaluate(path):
-  if not init_flag:
+  if not _init_flag:
     _init()
   global _logger
   _logger.info(f'evaluating: {path}')
@@ -134,16 +135,17 @@ def evaluate(path):
 
 import stocklab.utils
 def _update(mod):
+  global config
   if not stocklab.utils.is_outdated(mod.name):
     return
-  with get_db() as db:
+  with get_db('database') as db:
     last_args = None
     db.declare_table(mod.name, mod.spec['schema'])
     while True:
       update_required, crawl_args = mod.check_update(db, last_args)
       last_args = crawl_args
       if update_required:
-        if stocklab.force_offline:
+        if config['force_offline']:
           raise NoLongerAvailable('Please unset' +\
               'force_offline option to enable crawlers')
         mod.logger.info('meta miss')
@@ -154,7 +156,7 @@ def _update(mod):
         break
 
 def metaevaluate(path):
-  if not init_flag:
+  if not _init_flag:
     _init()
   global _logger
   _logger.debug(f'evaluating: {path}')
@@ -164,8 +166,20 @@ def metaevaluate(path):
   return _eval(path)
 
 def _init():
-  global init_flag
-  init_flag = True
+  global _init_flag
+  _init_flag = True
+
+  global config, modules_path, crawlers_path, data_path
+  from yaml import load, dump
+  try:
+    from yaml import CLoader as Loader, CDumper as Dumper
+  except ImportError:
+    from yaml import Loader, Dumper
+  config = load(open(CONFIG_FILE, 'r').read(), Loader=Loader)
+  root_path = os.path.abspath(config['root_dir'])
+  modules_path = os.path.join(root_path, MODULE_DIR)
+  crawlers_path = os.path.join(root_path, CRAWlER_DIR)
+  data_path = os.path.join(root_path, DATA_DIR)
 
   global _logger
   _logger = create_logger('stocklab_core')

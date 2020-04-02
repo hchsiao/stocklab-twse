@@ -13,7 +13,7 @@ def datetime_to_timestamp(dt):
 
 def now():
   _offset = timedelta(seconds=time.timezone)
-  return datetime.now() + _offset + timedelta(hours=stocklab.timezone_offset)
+  return datetime.now() + _offset + timedelta(hours=stocklab.config['timezone_offset'])
 
 @functools.total_ordering
 class Date:

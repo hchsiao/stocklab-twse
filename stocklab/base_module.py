@@ -55,13 +55,13 @@ class Module(metaclass=abc.ABCMeta):
 
   def access_db(self, args):
     query_res = None
-    with stocklab.get_db() as db:
+    with stocklab.get_db('database') as db:
       db.declare_table(self.name, self.spec['schema'])
       while True:
         query_res, db_miss, crawl_args = self.query_db(db, args)
         if db_miss:
           self.logger.info('db miss')
-          if stocklab.force_offline:
+          if stocklab.config['force_offline']:
             raise NoLongerAvailable('Please unset' +\
                 'force_offline option to enable crawlers')
           res = self.parser(**crawl_args)

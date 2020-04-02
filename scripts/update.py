@@ -30,8 +30,8 @@ def up_to_date(mod_name, table_may_not_exist=True):
   if not is_outdated(mod_name):
     return True
 
-  _force_offline = stocklab.force_offline
-  stocklab.force_offline = True
+  _force_offline = stocklab.config['force_offline']
+  stocklab.config['force_offline'] = True
   try:
     for_each_stock_id(_cb)
   except NoLongerAvailable as e:
@@ -45,7 +45,7 @@ def up_to_date(mod_name, table_may_not_exist=True):
     else:
       raise e
   finally:
-    stocklab.force_offline = _force_offline
+    stocklab.config['force_offline'] = _force_offline
 
   set_last_update_datetime(mod_name)
   return True
