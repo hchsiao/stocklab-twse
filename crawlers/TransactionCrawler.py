@@ -88,7 +88,7 @@ class TransactionCrawler(stocklab.Crawler, SpeedLimiterMixin, RetryMixin):
     retval = self._trans(stock_id)
 
     def f(s):
-      if '--' == s:
+      if '--' == s or '市價' == s:
         return None
       return 0 if s == '' else float(s)
     def t(s): # TODO: implement Time() in stocklab/datetime.py
@@ -96,27 +96,32 @@ class TransactionCrawler(stocklab.Crawler, SpeedLimiterMixin, RetryMixin):
       dt = datetime.strptime(f'1970-01-01 {s}', '%Y-%m-%d %H:%M:%S')
       return datetime_to_timestamp(dt)
     result = []
-    for time_str, buy, sell, deal, vol in retval:
-      curr_t = t(time_str)
-      result.append({
-        'stock_id': stock_id,
-        'date': trade_date,
-        'time': curr_t,
-        'buy': f(buy),
-        'sell': f(sell),
-        'deal': f(deal),
-        'volume': int(vol)
-        })
-    if not result:
-      result.append({
-        'stock_id': stock_id,
-        'date': trade_date,
-        'time': None,
-        'buy': None,
-        'sell': None,
-        'deal': None,
-        'volume': None
-        })
+
+    try:
+      for time_str, buy, sell, deal, vol in retval:
+        curr_t = t(time_str)
+        result.append({
+          'stock_id': stock_id,
+          'date': trade_date,
+          'time': curr_t,
+          'buy': f(buy),
+          'sell': f(sell),
+          'deal': f(deal),
+          'volume': int(vol)
+          })
+      if not result:
+        result.append({
+          'stock_id': stock_id,
+          'date': trade_date,
+          'time': None,
+          'buy': None,
+          'sell': None,
+          'deal': None,
+          'volume': None
+          })
+    except Exception as e:
+      self.logger.error(f'Source of error (dump): {retval}')
+      raise e
 
     # abnormality detector
     assert '2330' != stock_id or len(result) > 50, 'abnormality detected'
