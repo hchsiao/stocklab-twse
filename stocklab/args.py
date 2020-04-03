@@ -9,7 +9,7 @@ class Args(dict):
       else:
         assert type(spec) is tuple
         arg_name, arg_type = spec
-        if '_' == arg_str: # underscore meand dont-care
+        if '_' == arg_str: # underscore means dont-care
           self[arg_name] = None
         elif type(arg_type) is list: # type is the range of its value
           assert arg_str in arg_type

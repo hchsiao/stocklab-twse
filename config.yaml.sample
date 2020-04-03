@@ -5,11 +5,11 @@ timezone_offset: 8 # Taiwan timezone: GMT+8
 root_dir: "./"
 database:
   type: mssql
-  url: dburl
+  driver: ODBC Driver 17 for SQL Server
+  host: dburl
   user: user
   password: pw
   rebuild_metadata: false
 cache:
   type: sqlite
-  url: "./app_data"
-
+  filename: db.sqlite

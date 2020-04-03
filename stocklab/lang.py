@@ -13,10 +13,10 @@ class Expr:
 
   def __getattr__(self, attr):
     attr = str(attr)
-    if attr[-1] == '_':
+    if attr[-1] == '_' and len(attr) > 1:
       return None # to ignore things like: ipython_canary_method_should_not_exist_
 
-    new_argv = self.argv + [attr.lstrip('_')]
+    new_argv = self.argv + [attr.lstrip('_') or '_']
     new_expr = Expr(new_argv, meta=self.meta)
 
     def _eval(expr):

@@ -1,7 +1,5 @@
 ## TODO
-- merge old db (see colab)
 - isolate stocklab-core
-- make use of config.yaml
 
 ## TODO: Main objective (to predict)
 - (exist/never) k-(higher/lower) than current price within N-days
