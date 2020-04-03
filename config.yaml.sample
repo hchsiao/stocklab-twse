@@ -8,6 +8,7 @@ database:
   url: dburl
   user: user
   password: pw
+  rebuild_metadata: false
 cache:
   type: sqlite
   url: "./app_data"

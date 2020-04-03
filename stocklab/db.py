@@ -22,13 +22,16 @@ class get_db(pydal.DAL, ContextDecorator):
       import os
       db_path = os.path.join(stocklab.data_path, self.config['filename'])
       uri = f'sqlite://{db_path}'
-      self.__kwargs['folder'] = stocklab.data_path
     elif self.config['type'] == 'mssql':
       url = self.config['url']
       user = self.config['user']
       password = self.config['password']
       driver = self.config['driver']
       uri = f'mssql4://{user}:{password}@{url}/stocklab-db?driver={driver}'
+
+    self.__kwargs['folder'] = stocklab.data_path
+    if 'rebuild_metadata' in self.config and self.config['rebuild_metadata']:
+      self.__kwargs['fake_migrate_all'] = True
     super().__init__(uri=uri, *self.__args, **self.__kwargs)
     return self
 
