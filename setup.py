@@ -8,14 +8,14 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    name='stocklab',
-    version='0.1.1',
-    description='A modular python programming interface to access financial data from various sources.',
+    name='stocklab-twse',
+    version='0.3.1',
+    description='Stocklab\'s TWSE bundle',
 
     long_description=long_description,
     long_description_content_type='text/markdown',
 
-    url='https://github.com/syoukore/stocklab',
+    url='https://github.com/syoukore/stocklab-twse',
 
     author='syoukore',
 
@@ -37,13 +37,12 @@ setup(
     python_requires='>=3.5',
 
     install_requires=[
-        'numpy',
-        'scipy',
-        'mpl_finance',
-        'beautifulsoup4',
-        'requests',
-        'cloudscraper',
-        'pyDAL',
-        'pyyaml',
-        ],
+      'stocklab', # clone from: https://github.com/syoukore/stocklab
+      'numpy',
+      'scipy',
+      'mpl_finance',
+      'beautifulsoup4',
+      'requests',
+      'cloudscraper',
+      ],
 )
