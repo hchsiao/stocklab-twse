@@ -6,6 +6,56 @@ import mpl_finance as mpf
 import matplotlib.ticker as ticker
 
 @stocklab.declare
+class myma(stocklab.Module):
+  spec = {
+      'args': [
+        'stock_id', # string
+        ('date', Date),
+        ('N', int),
+        ]
+      }
+  def run(self, args):
+    # operations
+    indices = stocklab.metaevaluate(f'valid_dates.{args.date}.{args.N}.zero')
+    paths = [f'twse.{args.stock_id}.{_date}.min' for _date in indices]
+    low = np.array([stocklab.evaluate(p) for p in paths])
+    paths = [f'twse.{args.stock_id}.{_date}.max' for _date in indices]
+    high = np.array([stocklab.evaluate(p) for p in paths])
+
+    return (low + high).mean()/2
+
+@stocklab.declare
+class peak(stocklab.Module):
+  spec = {
+      'args': [
+        'stock_id', # string
+        ('date', Date),
+        ]
+      }
+  def run(self, args):
+    indices = stocklab.metaevaluate(f'valid_dates.{args.date}.3.zero')
+    paths = [f'twse.{args.stock_id}.{_date}.close' for _date in indices]
+    data = np.array([stocklab.evaluate(p) for p in paths])
+
+    return data[1] > data[0] and data[1] > data[2]
+
+@stocklab.declare
+class extended(stocklab.Module):
+  spec = {
+      'args': [
+        'stock_id', # string
+        ('date', Date),
+        ('N', int),
+        ]
+      }
+  def run(self, args):
+    indices = stocklab.metaevaluate(f'valid_dates.{args.date}.{args.N}.lag')
+    paths = [f'peak.{args.stock_id}.{_date}' for _date in indices]
+    data = np.array([stocklab.evaluate(p) for p in paths])
+
+    return data.any()
+
+@stocklab.declare
 class bull(stocklab.Module):
   spec = {
       'args': [
@@ -15,7 +65,7 @@ class bull(stocklab.Module):
       }
   def run(self, args):
     indices = stocklab.metaevaluate(f'valid_dates.{args.date}.2.lag')
-    paths = [f'myma.{args.stock_id}.{_date}.40' for _date in indices]
+    paths = [f'myma.{args.stock_id}.{_date}.11' for _date in indices]
     data = np.array([stocklab.evaluate(p) for p in paths])
 
     k = 0.25
@@ -67,7 +117,7 @@ class plot(stocklab.Module):
     ax.legend(loc='upper left')
     def f(x, pos):
         try:
-            return indices[int(round(x))]
+            return str(indices[int(round(x))])
         except IndexError:
             print(x)
             return ''
@@ -84,6 +134,7 @@ class plot(stocklab.Module):
     bx.set_xticks(np.unique(ticks))
     ax.xaxis.set_major_formatter(ticker.FuncFormatter(f))
     bx.xaxis.set_major_formatter(ticker.FuncFormatter(f))
+    indices = [str(i) for i in indices]
     ax.fill_between(indices, LARGE_NUM, where=data['bull'],
             facecolor='green', alpha=0.2)
     plt.show()
@@ -91,12 +142,6 @@ class plot(stocklab.Module):
 
 import logging
 stocklab.change_log_level(logging.DEBUG)
-#res = stocklab.evaluate('valid_dates.20200110.1.lag')
-res = stocklab.evaluate('transactions.2330.20200214')
+
+res = stocklab.evaluate('plot.2330.20200320.41')
 print(res)
-exit()
-from stocklab.sampling import rand_stock, rand_date
-#print(rand_stock(['24', '13']))
-#print(rand_date(20130911, 20150111, 3))
-from stocklab.simulate import simulate
-#print(simulate(20130911, 5, '3034'))
