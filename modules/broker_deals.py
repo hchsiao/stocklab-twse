@@ -27,10 +27,15 @@ class broker_deals(stocklab.Module):
 
   def query_db(self, db, args):
     table = db[self.name]
-    query = table.stock_id == args.stock_id
-    query &= table.date == args.date.timestamp()
-    retval = db(query).select()
-    if retval:
-      return retval, False, {'stock_id': args.stock_id, 'date': args.date}
+    if args.stock_id is None:
+      query = table.date == args.date.timestamp()
+      retval = db(query).select(table.stock_id, distinct=True)
+      return retval, False, {}
     else:
-      return retval, True, {'stock_id': args.stock_id, 'date': args.date}
+      query = table.stock_id == args.stock_id
+      query &= table.date == args.date.timestamp()
+      retval = db(query).select()
+      if retval:
+        return retval, False, {'stock_id': args.stock_id, 'date': args.date}
+      else:
+        return retval, True, {'stock_id': args.stock_id, 'date': args.date}

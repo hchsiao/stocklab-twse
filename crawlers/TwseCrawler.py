@@ -122,25 +122,20 @@ class TwseCrawler(stocklab.Crawler, SpeedLimiterMixin, RetryMixin):
         )
     return [{'date': Date(info[0])} for info in jsn['data']]
 
-  def stock_codes(self, targets):
-    retvals = []
-    for type_id, type_name in targets:
+  def stock_list(self):
+    targets = [t['type_id'] for t in self.stock_types()]
+    stock_map = {}
+    for type_id in targets:
       url = f'https://www.twse.com.tw/zh/api/codeFilters?filter={type_id}'
       stocks_jsn = self._request(url, speed_limit=False)
       s_list = stocks_jsn['resualt'] # resualt???
-      _id = 0
       for s in s_list:
         stock_id, stock_name = s.split('\t')
-        retvals.append({
-          'type_id': type_id,
-          'internal_id': _id,
-          'stock_id': stock_id,
-          'name': stock_name
-          })
-        _id += 1
-    return retvals
+        stock_map[stock_id] = stock_name
+    retval = [{'stock_id': sid, 'name': stock_map[sid]} for sid in stock_map.keys()]
+    return retval
 
-  def stock_code_js(self):
+  def stock_types(self):
     url = 'https://www.twse.com.tw/rsrc/js/stock-code.js'
     page = self._request(url, mode='plain', speed_limit=False)
     pattern = re.compile(r'\{(((?!(\{|\})).)*)\}')

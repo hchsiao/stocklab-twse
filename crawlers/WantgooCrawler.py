@@ -36,7 +36,10 @@ class WantgooCrawler(stocklab.Crawler, SpeedLimiterMixin, RetryMixin):
       resp = self.speed_limited_request(self.scraper.get, url)
 
       pat = r'var _EndDate = "([0-9]+)";'
-      date_str = re.search(pat, resp.text).group(1)
+      result = re.search(pat, resp.text)
+      if not result:
+        self.logger.error(resp.text)
+      date_str = result.group(1)
       self._last_date = Date(date_str)
     return self._last_date # TODO: do not froze (once set) until session ends
 

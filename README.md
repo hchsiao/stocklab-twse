@@ -1,4 +1,6 @@
 # stocklab-twse
+- TODO
+  - properly implement stock_types (w/ relational-map table)
 
 ## TODO: Main objective (to predict)
 - (exist/never) k-(higher/lower) than current price within N-days
