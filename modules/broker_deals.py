@@ -25,6 +25,17 @@ class broker_deals(stocklab.Module):
   def run(self, args):
     return self.access_db(args)
 
+  def peak_db(self, db, args):
+    table = db[self.name]
+    assert args.stock_id is not None
+    query = table.stock_id == args.stock_id
+    query &= table.date == args.date.timestamp()
+    retval = db(query).select(limitby=(0, 1))
+    if retval:
+      return True, False, {'stock_id': args.stock_id, 'date': args.date}
+    else:
+      return False, True, {'stock_id': args.stock_id, 'date': args.date}
+
   def query_db(self, db, args):
     table = db[self.name]
     if args.stock_id is None:
@@ -36,6 +47,9 @@ class broker_deals(stocklab.Module):
       query &= table.date == args.date.timestamp()
       retval = db(query).select()
       if retval:
-        return retval, False, {'stock_id': args.stock_id, 'date': args.date}
+        if retval[0].broker_id is None:
+          return [], False, {}
+        else:
+          return retval, False, {}
       else:
         return retval, True, {'stock_id': args.stock_id, 'date': args.date}

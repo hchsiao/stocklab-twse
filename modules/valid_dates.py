@@ -54,6 +54,9 @@ class valid_dates(stocklab.MetaModule):
       dates = [Date(r.date, tstmp=True) for r in retval]
     sorted_idx = np.argsort([int(i) for i in dates])
     dates = np.array(dates)[sorted_idx]
+
+    if len(dates) < args.N:
+      raise InvalidDateRequested('date out-of-range', args)
     return dates, False, {}
 
   def check_update(self, db, last_args=None):
