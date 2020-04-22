@@ -3,13 +3,14 @@ import numpy as np
 import stocklab
 from stocklab.datetime import Date, date_to_timestamp
 from stocklab.error import InvalidDateRequested
+from stocklab.crawler import CrawlerTrigger
 
 class valid_dates(stocklab.MetaModule):
   TWSE_FIRST_DAY = Date('20100104')
   spec = {
       'update_offset': (13, 40),
       'ignore_existed': True,
-      'crawler': 'TwseCrawler.dates',
+      'crawler_entry': 'TwseCrawler.dates',
       'args': [
         ('target_date', Date),
         ('N', int),
@@ -20,19 +21,13 @@ class valid_dates(stocklab.MetaModule):
         }
       }
 
-  def run(self, args):
+  def evaluate(self, db, args):
     if args.target_date < valid_dates.TWSE_FIRST_DAY:
       raise InvalidDateRequested('Date requested eariler than' \
           + 'the earliest day in TWSE DB', args.target_date)
     elif args.target_date > Date.today():
       raise InvalidDateRequested('Future date requested', args.target_date)
 
-    dates = self.access_db(args)
-    if args.target_date not in dates:
-      raise InvalidDateRequested('Date requested is not weekday?', args.target_date)
-    return dates
-
-  def query_db(self, db, args):
     table = db[self.name]
 
     if 'zero' == args.phase_shift:
@@ -57,16 +52,18 @@ class valid_dates(stocklab.MetaModule):
 
     if len(dates) < args.N:
       raise InvalidDateRequested('date out-of-range', args)
-    return dates, False, {}
+    if args.target_date not in dates:
+      raise InvalidDateRequested('Date requested is not weekday?', args.target_date)
+    return dates
 
-  def check_update(self, db, last_args=None):
+  def db_is_fresh(self, db, last_crawl):
     table = db[self.name]
     db_max_str = db().select(table.date.max())[0][table.date.max()]
     db_min_str = db().select(table.date.min())[0][table.date.min()]
 
     if not db_max_str:
       fetch_date = valid_dates.TWSE_FIRST_DAY
-    elif last_args is None:
+    elif last_crawl is None:
       max_date = Date(db_max_str, tstmp=True)
       max_month = int(int(max_date) / 100)
       fetch_date = Date(f'{max_month}01')
@@ -81,5 +78,5 @@ class valid_dates(stocklab.MetaModule):
       else:
         fetch_date = Date(f'{max_month}01').shift(1, 'month')
 
-    need_update = fetch_date is not None
-    return need_update, {'fetch_date': fetch_date}
+    if fetch_date is not None:
+      raise CrawlerTrigger(fetch_date=fetch_date)

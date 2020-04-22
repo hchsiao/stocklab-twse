@@ -1,4 +1,3 @@
-import time
 import stocklab
 from stocklab.datetime import Date
 
@@ -13,10 +12,7 @@ class stock_brokers(stocklab.Module):
         ],
       }
 
-  def run(self, args):
-    return self.access_db(args)
-
-  def query_db(self, db, args):
+  def evaluate(self, db, args):
     dates = stocklab.metaevaluate(f'valid_dates.{args.date}.{args.n_days}.lag')
     [stocklab.peek(f'broker_deals.{args.stock_id}.{d}') for d in dates]
 
@@ -45,4 +41,4 @@ class stock_brokers(stocklab.Module):
         if r.sell_amt + old['sell_amt'] > 0:
           old['sell_price'] = (r.sell_price * r.sell_amt + old['sell_price'] * old['sell_amt']) / (r.sell_amt + old['sell_amt'])
           old['sell_amt'] += r.sell_amt
-    return retval, False, {}
+    return retval

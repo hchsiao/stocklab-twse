@@ -1,12 +1,12 @@
-import time
 import stocklab
 from stocklab.datetime import Date, date_to_timestamp
+from stocklab.crawler import CrawlerTrigger
 
 class transactions(stocklab.Module):
   spec = {
       'update_offset': (13, 40),
       'disable_cache': True,
-      'crawler': 'TransactionCrawler.parser',
+      'crawler_entry': 'TransactionCrawler.parser',
       'args': [
         'stock_id',
         ('date', Date),
@@ -22,20 +22,17 @@ class transactions(stocklab.Module):
         }
       }
 
-  def run(self, args):
-    return self.access_db(args)
-
-  def query_db(self, db, args):
+  def evaluate(self, db, args):
     table = db[self.name]
     if args.stock_id is None:
       query = table.date == args.date.timestamp()
       retval = db(query).select(table.stock_id, distinct=True)
-      return retval, False, {}
+      return retval
     else:
       query = table.stock_id == args.stock_id
       query &= table.date == args.date.timestamp()
       retval = db(query).select()
       if retval:
-        return retval, False, {'stock_id': args.stock_id, 'date': args.date}
+        return retval
       else:
-        return retval, True, {'stock_id': args.stock_id, 'date': args.date}
+        raise CrawlerTrigger(stock_id=args.stock_id, date=args.date)
