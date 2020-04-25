@@ -3,10 +3,10 @@ Toolkit for studying TWSE stocks
 
 ## Notes to myself
 - TODO
-  - properly implement stock_types (w/ relational-map table)
-  - random sampling
   - sign searcher (pre-built cache vs. ad-hoc search)
-  - support float type in expression
+  - properly implement stock_types (w/ relational-map table)
+  - random sampling Stochastic(stocklab.MetaModule): stocklab.evaluate_rand()
+  - improve caching
   - class stocklab.Score(stocklab.Module): a module that returns a number
     - search for high scores (human-inspection to determine significance)
     - rankable among points (stock_id-date pair)

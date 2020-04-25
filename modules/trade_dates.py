@@ -5,7 +5,8 @@ from stocklab.datetime import Date, date_to_timestamp
 from stocklab.error import InvalidDateRequested
 from stocklab.crawler import CrawlerTrigger
 
-class valid_dates(stocklab.MetaModule):
+# TODO: base type: stocklab.module.DateList
+class trade_dates(stocklab.MetaModule):
   TWSE_FIRST_DAY = Date('20100104')
   spec = {
       'update_offset': (13, 40),
@@ -22,7 +23,7 @@ class valid_dates(stocklab.MetaModule):
       }
 
   def evaluate(self, db, args):
-    if args.target_date < valid_dates.TWSE_FIRST_DAY:
+    if args.target_date < trade_dates.TWSE_FIRST_DAY:
       raise InvalidDateRequested('Date requested eariler than' \
           + 'the earliest day in TWSE DB', args.target_date)
     elif args.target_date > Date.today():
@@ -48,7 +49,7 @@ class valid_dates(stocklab.MetaModule):
       retval = db(query).select(orderby=~table.date, limitby=(0, args.N))
       dates = [Date(r.date, tstmp=True) for r in retval]
     sorted_idx = np.argsort([int(i) for i in dates])
-    dates = np.array(dates)[sorted_idx]
+    dates = np.array(dates)[sorted_idx].tolist()
 
     if len(dates) < args.N:
       raise InvalidDateRequested('date out-of-range', args)
@@ -62,7 +63,7 @@ class valid_dates(stocklab.MetaModule):
     db_min_str = db().select(table.date.min())[0][table.date.min()]
 
     if not db_max_str:
-      fetch_date = valid_dates.TWSE_FIRST_DAY
+      fetch_date = trade_dates.TWSE_FIRST_DAY
     elif last_crawl is None:
       max_date = Date(db_max_str, tstmp=True)
       max_month = int(int(max_date) / 100)
@@ -74,7 +75,7 @@ class valid_dates(stocklab.MetaModule):
       if max_month == this_month:
         fetch_date = None
         self.logger.info('Update complete')
-        assert Date(db_min_str, tstmp=True) == valid_dates.TWSE_FIRST_DAY
+        assert Date(db_min_str, tstmp=True) == trade_dates.TWSE_FIRST_DAY
       else:
         fetch_date = Date(f'{max_month}01').shift(1, 'month')
 

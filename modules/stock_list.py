@@ -3,6 +3,7 @@ import stocklab
 class stock_list(stocklab.MetaModule):
   spec = {
       'update_offset': (9, 0),
+      'disable_cache': False,
       'ignore_existed': True,
       'crawler_entry': 'TwseCrawler.stock_list',
       'args': [],

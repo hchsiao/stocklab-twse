@@ -12,7 +12,7 @@ class tendency(stocklab.Module):
         ],
       }
 
-  def evaluate(self, args):
+  def evaluate(self, db, args):
     brokers = stocklab.evaluate(f'stock_brokers.{args.stock_id}._.{args.date}.{args.n_days}')
     force_list = np.array([b['buy_amt'] - b['sell_amt'] for bid, b in brokers.items()])
     if 'buy' == args.buy_or_sell:

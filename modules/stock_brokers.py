@@ -13,7 +13,7 @@ class stock_brokers(stocklab.Module):
       }
 
   def evaluate(self, db, args):
-    dates = stocklab.metaevaluate(f'valid_dates.{args.date}.{args.n_days}.lag')
+    dates = stocklab.metaevaluate(f'trade_dates.{args.date}.{args.n_days}.lag')
     [stocklab.peek(f'broker_deals.{args.stock_id}.{d}') for d in dates]
 
     table = db['broker_deals']

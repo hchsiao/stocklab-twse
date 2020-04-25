@@ -18,7 +18,7 @@ class myma(stocklab.Module):
       }
   def run(self, args):
     # operations
-    indices = stocklab.metaevaluate(f'valid_dates.{args.date}.{args.N}.lag')
+    indices = stocklab.metaevaluate(f'trade_dates.{args.date}.{args.N}.lag')
     paths = [f'twse.{args.stock_id}.{_date}.close' for _date in indices]
     prices = np.array([stocklab.evaluate(p) for p in paths])
 
@@ -34,7 +34,7 @@ class myma(stocklab.Module):
 #        ]
 #      }
 #  def run(self, args):
-#    indices = stocklab.metaevaluate(f'valid_dates.{args.date}.2.lead')
+#    indices = stocklab.metaevaluate(f'trade_dates.{args.date}.2.lead')
 #    paths = [f'twse.{args.stock_id}.{_date}.close' for _date in indices]
 #    data = np.array([stocklab.evaluate(p) for p in paths])
 #    buy = data[1] > data[0]
@@ -51,7 +51,7 @@ class sign(stocklab.Module):
         ]
       }
   def run(self, args):
-    indices = stocklab.metaevaluate(f'valid_dates.{args.date}.2.lag')
+    indices = stocklab.metaevaluate(f'trade_dates.{args.date}.2.lag')
     ma_l = [stocklab.evaluate(f'myma.{args.stock_id}.{_date}.{L}')
         for _date in indices]
     ma_s = [stocklab.evaluate(f'myma.{args.stock_id}.{_date}.{S}')
@@ -98,7 +98,7 @@ class simulate(stocklab.Module):
       else:
         return self.sim(stock_id, dates[1:], balance, cost, sell_th)
   def run(self, args):
-    dates = stocklab.metaevaluate(f'valid_dates.{args.date}.{args.N}.lead')
+    dates = stocklab.metaevaluate(f'trade_dates.{args.date}.{args.N}.lead')
     signs = [stocklab.evaluate(f'sign.{args.stock_id}.{d}') for d in dates]
     print(signs)
     return self.sim(args.stock_id, dates, sell_th=args.sell_th)
@@ -114,7 +114,7 @@ class plot(stocklab.Module):
       }
   def run(self, args):
     LARGE_NUM = 5000
-    indices = stocklab.metaevaluate(f'valid_dates.{args.date}.{args.N}.lead')
+    indices = stocklab.metaevaluate(f'trade_dates.{args.date}.{args.N}.lead')
     paths = {
             'open': [f'twse.{args.stock_id}.{_date}.open' for _date in indices],
             'close': [f'twse.{args.stock_id}.{_date}.close' for _date in indices],
@@ -200,6 +200,6 @@ import logging
 res = stocklab.evaluate(f'simulate.2330.20191202.80._')
 #res = stocklab.evaluate(f'plot.3034.20191202.50')
 print(res)
-#indices = stocklab.metaevaluate(f'valid_dates.20200120.20.lead')
+#indices = stocklab.metaevaluate(f'trade_dates.20200120.20.lead')
 #prices = [stocklab.evaluate(f'twse.2330.{d}.close') for d in indices]
 #print({str(k):v for k, v in zip(indices, prices)})

@@ -9,7 +9,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='stocklab-twse',
-    version='0.3.1',
+    version='0.5.1',
     description='Stocklab\'s TWSE bundle',
 
     long_description=long_description,
@@ -40,7 +40,7 @@ setup(
       'stocklab', # clone from: https://github.com/syoukore/stocklab
       'numpy',
       'scipy',
-      'mpl_finance',
+      'mplfinance',
       'beautifulsoup4',
       'requests',
       'cloudscraper',

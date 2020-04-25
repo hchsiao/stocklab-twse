@@ -1,9 +1,10 @@
 import stocklab
 from stocklab.datetime import date_to_timestamp
 
-class suspended(stocklab.MetaModule):
+class suspended_stock_list(stocklab.MetaModule):
   spec = {
       'update_offset': (9, 0),
+      'disable_cache': False,
       'ignore_existed': True,
       'crawler_entry': 'TwseCrawler.suspended_listing',
       'args': [],

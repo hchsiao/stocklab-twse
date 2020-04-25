@@ -63,6 +63,10 @@ class TwseCrawler(stocklab.Crawler, SpeedLimiterMixin, RetryMixin):
 
   def stock_day(self, date, stock_id):
     assert type(date) is Date
+
+    # Check date validity
+    stocklab.metaevaluate(f'trade_dates.{date}.1.lag')
+
     date_s = str(date).replace('-', '')
     url = 'https://www.twse.com.tw/exchangeReport/STOCK_DAY?'\
             + f'response=json&date={date_s}&stockNo={stock_id}'

@@ -1,19 +1,16 @@
 import stocklab
+import stocklab.module
 from stocklab.datetime import Date, date_to_timestamp
 from stocklab.crawler import CrawlerTrigger
 
-class twse(stocklab.Module):
-  ATTR_NAMES = ['delta_n_share', 'delta_price_share', \
-          'open', 'max', 'min', 'close', 'n_transactions']
-
+class twse(stocklab.module.Primitive):
   spec = {
       'ignore_existed': True, # API returns a month at once
       'disable_cache': False,
       'crawler_entry': 'TwseCrawler.stock_day',
       'args': [
-        'stock_id', # default type: str
+        'stock_id',
         ('date', Date),
-        ('attr', ATTR_NAMES),
         ],
       'schema': {
         'stock_id': {'key': True},
@@ -29,14 +26,11 @@ class twse(stocklab.Module):
       }
 
   def evaluate(self, db, args):
-    # Check date validity
-    stocklab.metaevaluate(f'valid_dates.{args.date}.1.lag')
-
     table = db[self.name]
     query = table.stock_id == args.stock_id
     query &= table.date == args.date.timestamp()
-    retval = db(query).select()
+    retval = db(query).select(limitby=(0, 1))
     if retval:
-      return retval[0][args.attr]
+      return retval[0]
     else:
       raise CrawlerTrigger(date=args.date, stock_id=args.stock_id)

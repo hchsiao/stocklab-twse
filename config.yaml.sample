@@ -3,6 +3,8 @@ config_name: stocklab-twse
 force_offline: false
 timezone_offset: 8 # Taiwan timezone: GMT+8
 root_dir: "./"
+#today_is: 2020-04-24
+stocks_of_interest: active_stock_list
 database:
   type: mssql
   driver: ODBC Driver 17 for SQL Server

@@ -23,7 +23,7 @@ class my_golden(stocklab.Module):
         ]
       }
   def run(self, args):
-    indices = stocklab.metaevaluate(f'valid_dates.{args.date}.{args.days}.lead')
+    indices = stocklab.metaevaluate(f'trade_dates.{args.date}.{args.days}.lead')
     paths = [f'twse.{args.stock_id}.{_date}.close' for _date in indices]
     data = np.array([stocklab.evaluate(p) for p in paths])
     th = data[0] * (args.th / 100.0)
@@ -118,7 +118,7 @@ class my_tester(stocklab.Module):
 # only for exploration purpose
 def map_dates(cb, mode='lag'):
   retval = []
-  dates = stocklab.metaevaluate(f'valid_dates.{date}.{days}.{mode}')
+  dates = stocklab.metaevaluate(f'trade_dates.{date}.{days}.{mode}')
   for d in dates:
     retval.append((d, cb(d)))
   return retval

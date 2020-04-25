@@ -47,8 +47,12 @@ class WantgooCrawler(stocklab.Crawler, SpeedLimiterMixin, RetryMixin):
     assert type(date) is Date
     date_s = str(date).replace('-', '')
 
+    # Check stock_id validity
+    stock_list = [row.stock_id for row in stocklab.metaevaluate('stock_list')]
+    assert stock_id in stock_list
+
     # Check date validity
-    stocklab.metaevaluate(f'valid_dates.{date}.1.lag')
+    stocklab.metaevaluate(f'trade_dates.{date}.1.lag')
     date_lag = self._get_last_date() - date
     if date_lag > WantgooCrawler.DATA_VALID_DAYS or date_lag < 0:
       raise NoLongerAvailable('Requested date not available. Unless another source of data are found')

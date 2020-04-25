@@ -78,8 +78,12 @@ class TransactionCrawler(stocklab.Crawler, SpeedLimiterMixin, RetryMixin):
     return retval
 
   def parser(self, stock_id, date):
+    # Check stock_id validity
+    stock_list = [row.stock_id for row in stocklab.metaevaluate('stock_list')]
+    assert stock_id in stock_list
+
     # Check date validity (TODAY will be valid after the market closed)
-    stocklab.metaevaluate(f'valid_dates.{date}.1.lag')
+    stocklab.metaevaluate(f'trade_dates.{date}.1.lag')
     # Check the date requested matches data on the website
     trade_date = stocklab.metaevaluate('last_trade_date')
     if date != trade_date:

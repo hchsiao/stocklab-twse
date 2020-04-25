@@ -1,7 +1,7 @@
 import stocklab
 from stocklab.datetime import date_to_timestamp
 
-class etf(stocklab.MetaModule):
+class etf_stock_list(stocklab.MetaModule):
   spec = {
       'update_offset': (9, 0),
       'ignore_existed': True,
