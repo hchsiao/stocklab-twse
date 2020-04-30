@@ -49,7 +49,7 @@ class trade_dates(stocklab.MetaModule):
       retval = db(query).select(orderby=~table.date, limitby=(0, args.N))
       dates = [Date(r.date, tstmp=True) for r in retval]
     sorted_idx = np.argsort([int(i) for i in dates])
-    dates = np.array(dates)[sorted_idx].tolist()
+    dates = np.asarray(dates)[sorted_idx].tolist()
 
     if len(dates) < args.N:
       raise InvalidDateRequested('date out-of-range', args)

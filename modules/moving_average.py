@@ -11,6 +11,6 @@ class moving_average(stocklab.Module):
         ]
       }
   def evaluate(self, db, args):
-    return np.array(stocklab.evaluate(
+    return np.asarray(stocklab.evaluate(
       f'ohlc.{args.stock_id}.($trade_dates.{args.date}.{args.N}.lag)'
-      )).mean()
+      ))[:,3].mean()

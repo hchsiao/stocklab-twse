@@ -3,16 +3,11 @@ Toolkit for studying TWSE stocks
 
 ## Notes to myself
 - TODO
+  - failed to raise log level
+  - make use of stock info
   - sign searcher (pre-built cache vs. ad-hoc search)
   - properly implement stock_types (w/ relational-map table)
-  - random sampling Stochastic(stocklab.MetaModule): stocklab.evaluate_rand()
   - improve caching
-  - class stocklab.Score(stocklab.Module): a module that returns a number
-    - search for high scores (human-inspection to determine significance)
-    - rankable among points (stock_id-date pair)
-  - class stocklab.Sign(stocklab.Sequence): a module that returns [0,1]
-    - tech. analysis
-    - price / vol. correlation
 - Golden: a sign that peeking the future
   - e.g., exist price (higher/lower) than current price for certain amount within N-days
 - Designing (verifying) a good sign
