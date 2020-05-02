@@ -6,7 +6,7 @@ from stocklab.utils import *
 #stocklab.change_log_level(logging.DEBUG)
 
 date = stocklab.metaevaluate('nearest.20200424')
-days = 100
+days = 15
 stock_id = 3034
 
 # plot it

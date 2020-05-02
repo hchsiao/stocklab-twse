@@ -71,7 +71,8 @@ class trade_dates(stocklab.MetaModule):
     else:
       max_date = Date(db_max_str, tstmp=True)
       max_month = int(int(max_date) / 100)
-      this_month = int(int(Date.today()) / 100)
+      last_trade = stocklab.metaevaluate('last_trade_date')
+      this_month = int(int(last_trade) / 100)
       if max_month == this_month:
         fetch_date = None
         self.logger.info('Update complete')
