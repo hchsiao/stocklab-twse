@@ -3,7 +3,6 @@ Toolkit for studying TWSE stocks
 
 ## Notes to myself
 - TODO
-  - failed to raise log level
   - make use of stock info
   - sign searcher (pre-built cache vs. ad-hoc search)
   - properly implement stock_types (w/ relational-map table)

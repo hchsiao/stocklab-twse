@@ -15,7 +15,7 @@ setup(
     long_description=long_description,
     long_description_content_type='text/markdown',
 
-    url='https://github.com/syoukore/stocklab-twse',
+    url='https://github.com/hchsiao/stocklab-twse',
 
     author='syoukore',
 
@@ -37,7 +37,7 @@ setup(
     python_requires='>=3.5',
 
     install_requires=[
-      'stocklab', # clone from: https://github.com/syoukore/stocklab
+      'stocklab', # clone from: https://github.com/hchsiao/stocklab
       'numpy',
       'scipy',
       'mplfinance',
