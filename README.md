@@ -1,6 +1,16 @@
 # stocklab-twse
 Toolkit for studying TWSE stocks
 
+## Features
+- [Crawlers](crawlers/) are modularized so website-specific logic (e.g. speed limits, retry conditions) won't get messy
+- [Modules](modules/), which represents an expression mapping, are modularized so un-related analysis tools can be easily decoupled
+- See [the ipython notebook](stocklab_demo.ipynb) to get an overview of what stocklab can do for you
+
+## Design choices
+- No transaction in the day -> an record w/ NULL prices will be added
+- do not care about ETF and the like
+- d_last_date := (will be updated after market opened not after closed)
+
 ## Notes to myself
 - TODO
   - make use of stock info
@@ -24,8 +34,3 @@ Evaluate for each stock_id: naive DB access scattered in each loop is slow
 1. First solve dependencies of all primitive data in DB (e.g. transactions, open & close price)
 2. Fetch them in once (if RAM size permits) as some data structure (numpy array?)
 3. Compute 
-
-## Design choices
-- No transaction in the day -> an record w/ NULL prices will be added
-- do not care about ETF and the like
-- d_last_date := (will be updated after market opened not after closed)
