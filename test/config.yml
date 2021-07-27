@@ -1,0 +1,11 @@
+---
+config_name: twse
+force_offline: false
+timezone_offset: 8 # Taiwan's timezone: GMT+8
+root_dir: "./app_data"
+#today_is: 2020-04-24
+stocks_of_interest: active_stock_list
+log_level: DEBUG
+database:
+  type: sqlite
+  filename: db.sqlite

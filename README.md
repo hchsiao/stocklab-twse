@@ -1,6 +1,9 @@
 # stocklab-twse
 Toolkit for studying TWSE stocks
 
+## TODO
+`import assets` should yield 'module not found'.
+
 ## Features
 - [Crawlers](crawlers/) are modularized so website-specific logic (e.g. speed limits, retry conditions) won't get messy
 - [Modules](modules/), which represents an expression mapping, are modularized so un-related analysis tools can be easily decoupled
