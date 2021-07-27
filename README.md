@@ -1,6 +1,22 @@
 # stocklab-twse
 Toolkit for studying TWSE stocks
 
+## TODO
+- Make the periodic crawler apart from stocklab (as one of utilities?)
+  - Note: primitive & metamodules have a update method
+    - not fresh if `!in_time_window(last_update_datetime, update_offset, update_period)`
+    - primitive: update today's date for stocks in 'stock_of_interest'
+    - metamodule: only run crawler_entry once (all modules will update at stocklab init)
+  - Node: `peek()` cause the same crawler trigger as evaluate, but runs faster
+- avoid
+  - module `last_trade_date`
+  - `*_list`
+
+### Mid-term
+- `import assets` should yield 'module not found'.
+- Fix README
+- Write docstring
+
 ## Features
 - [Crawlers](crawlers/) are modularized so website-specific logic (e.g. speed limits, retry conditions) won't get messy
 - [Modules](modules/), which represents an expression mapping, are modularized so un-related analysis tools can be easily decoupled

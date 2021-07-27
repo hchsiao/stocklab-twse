@@ -9,30 +9,16 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='stocklab-twse',
-    version='0.5.1',
+    version='0.6.0',
     description='Stocklab\'s TWSE bundle',
 
     long_description=long_description,
     long_description_content_type='text/markdown',
 
     url='https://github.com/hchsiao/stocklab-twse',
+    author='Shaun Hsiao',
 
-    author='syoukore',
-
-    # When your source code is in a subdirectory under the project root, e.g.
-    # `src/`, it is necessary to specify the `package_dir` argument.
-    #package_dir={'': 'src'},  # Optional
-
-    # You can just specify package directories manually here if your project is
-    # simple. Or you can use find_packages().
-    #
-    # Alternatively, if you just want to distribute a single Python file, use
-    # the `py_modules` argument instead as follows, which will expect a file
-    # called `my_module.py` to exist:
-    #
-    #   py_modules=["my_module"],
-    #
-    packages=find_packages(where='.'),  # Required
+    packages=find_packages(),
 
     python_requires='>=3.5',
 

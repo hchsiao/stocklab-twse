@@ -12,6 +12,7 @@ from stocklab.error import InvalidDateRequested, ParserError
 from stocklab.crawler import SpeedLimiterMixin, RetryMixin
 
 class TwseCrawler(stocklab.Crawler, SpeedLimiterMixin, RetryMixin):
+    '''
   spec = {
       'max_speed': 0.39,
       'tick_period': 0.01,
@@ -125,6 +126,7 @@ class TwseCrawler(stocklab.Crawler, SpeedLimiterMixin, RetryMixin):
         lambda _json: ParserError('bad response', {'res': _json})
         )
     return [{'date': Date(info[0])} for info in jsn['data']]
+'''
 
   def stock_list(self):
     targets = [t['type_id'] for t in self.stock_types()]
