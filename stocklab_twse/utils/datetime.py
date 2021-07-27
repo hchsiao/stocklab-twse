@@ -29,23 +29,28 @@ class Date:
       return Date(f'{dt.year:04}-{dt.month:02}-{dt.day:02}')
 
   def __init__(self, date, tstmp=False):
-    if tstmp:
-      if type(date) is str:
-        date = int(date)
-      date = datetime.utcfromtimestamp(date).strftime('%Y-%m-%d')
-    if type(date) is int or type(date) is dt_date:
-      date = str(date)
-    if '-' in date or '/' in date:
-      y, m, d = date.split('-') if '-' in date else date.split('/')
-      assert len(y) == 3 or len(y) == 4 # taiwanese or western year
-      y = int(y) if len(y) == 4 else int(y) + 1911
-      _date = str(y) + m.zfill(2) + d.zfill(2)
+    if isinstance(date, Date):
+      self.yyyy = date.yyyy
+      self.mm = date.mm
+      self.dd = date.dd
     else:
-      _date = date
-    assert len(_date) == 8, f"Cannot convert '{date}' to Date object"
-    self.yyyy = int(_date[:4])
-    self.mm = int(_date[4:6])
-    self.dd = int(_date[6:8])
+      if tstmp:
+        if type(date) is str:
+          date = int(date)
+        date = datetime.utcfromtimestamp(date).strftime('%Y-%m-%d')
+      if type(date) is int or type(date) is dt_date:
+        date = str(date)
+      if '-' in date or '/' in date:
+        y, m, d = date.split('-') if '-' in date else date.split('/')
+        assert len(y) == 3 or len(y) == 4 # taiwanese or western year
+        y = int(y) if len(y) == 4 else int(y) + 1911
+        _date = str(y) + m.zfill(2) + d.zfill(2)
+      else:
+        _date = date
+      assert len(_date) == 8, f"Cannot convert '{date}' to Date object"
+      self.yyyy = int(_date[:4])
+      self.mm = int(_date[4:6])
+      self.dd = int(_date[6:8])
     self.datetime = datetime(self.yyyy, self.mm, self.dd)
 
   def month_1st(self):

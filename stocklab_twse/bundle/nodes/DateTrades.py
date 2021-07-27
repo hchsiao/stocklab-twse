@@ -10,7 +10,7 @@ from stocklab_twse.utils.datetime import Date, date_to_timestamp
 class DateTrades(DataNode):
     TWSE_FIRST_DAY = Date('20100104')
 
-    crawler_entry = TWSECrawler.dates
+    crawler_entry = TWSECrawler.date_trades
     ignore_existed = True
 
     args = Args(

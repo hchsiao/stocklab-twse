@@ -2,7 +2,18 @@
 Toolkit for studying TWSE stocks
 
 ## TODO
-`import assets` should yield 'module not found'.
+- Make the periodic crawler apart from stocklab (as one of utilities?)
+  - state getter/setter
+
+### Mid-term
+- `import assets` should yield 'module not found'.
+- Fix README
+- Write docstring
+
+### Check removal
+- metamodule
+- last_trade_date
+- stock lists
 
 ## Features
 - [Crawlers](crawlers/) are modularized so website-specific logic (e.g. speed limits, retry conditions) won't get messy
